@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1B2039">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MealHub">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>MealHub - Take-out 메뉴 대시보드</title>
+<style>
+/* 공개 배포판: 삼성 라이선스 폰트 파일(fonts/SamsungOneKorean-*.ttf)은 퍼블릭 저장소에 올리지 않음 —
+   body의 폴백 스택('Malgun Gothic' 등)이 자동 적용됨. */
+
+:root {
+  --bg:    #1B2039;
+  --card:  #252D4A;
+  --card2: #1E2645;
+  --text:  #FFFFFF;
+  --muted: rgba(255,255,255,.45);
+  --border:rgba(255,255,255,.08);
+  --g1a:#FF6B9D; --g1b:#FFE45E;
+  --g2a:#4A90D9; --g2b:#5FC3E4;
+  --g3a:#11998E; --g3b:#38EF7D;
+  --green:#38EF7D; --red:#FF6B9D; --blue:#5FC3E4; --amber:#FFD166;
+  --r:16px; --r-sm:10px; --sb-w:195px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'SamsungOneKorean','Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:13px;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+#root{display:flex;height:100vh;overflow:hidden;}
+
+/* ─── Sidebar ──────────────────────────────────────────── */
+.sidebar{width:var(--sb-w);flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sb-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);}
+.sb-logo-ico{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--g1a),var(--g1b));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.sb-logo-txt{font-size:16px;font-weight:700;letter-spacing:-.3px;}
+.sb-logo-txt span{color:var(--g1a);}
+.sb-logo-sub{font-size:10px;color:var(--muted);letter-spacing:.4px;margin-top:1px;}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
+.sb-section-lbl{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:8px 12px 4px;}
+.sb-sep{height:1px;background:var(--border);margin:6px 8px;}
+.sb-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border-radius:9px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;text-align:left;border-left:3px solid transparent;}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,.05);}
+.sb-item.active{color:var(--text);background:rgba(255,255,255,.06);border-left:3px solid var(--g1a);font-weight:600;}
+.sb-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.sb-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;background:var(--g1a);color:#fff;}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);}
+
+/* ─── Main wrap + Topbar ──────────────────────────────── */
+.main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:58px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.tb-search{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;flex:1;max-width:260px;transition:border-color .15s;}
+.tb-search:focus-within{border-color:rgba(255,255,255,.2);}
+.tb-search input{border:none;background:none;outline:none;font-family:inherit;font-size:12px;color:var(--text);width:100%;}
+.tb-search input::placeholder{color:var(--muted);}
+.tb-spacer{flex:1;}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.live-tag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(17,153,142,.12);color:var(--green);display:flex;align-items:center;gap:5px;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.nav-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+.tbi{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;position:relative;transition:all .15s;}
+.tbi:hover{border-color:rgba(255,255,255,.2);}
+.tbi-badge{position:absolute;top:-3px;right:-3px;min-width:14px;height:14px;background:var(--g1a);color:#fff;font-size:8px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--bg);}
+.tb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--g1a),var(--g1b));display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;}
+
+/* ─── Content ─────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;min-height:0;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
+
+/* ─── Page title ──────────────────────────────────────── */
+.page-title{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.page-hdr-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+
+/* ─── Filter bar ──────────────────────────────────────── */
+.filter-bar{background:var(--card);border-radius:var(--r);padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.filter-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.ctrl-lbl{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);white-space:nowrap;min-width:26px;}
+.rest-tabs{display:flex;gap:4px;flex-wrap:wrap;}
+.rtab{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--muted);transition:all .12s;white-space:nowrap;}
+.rtab:hover{color:var(--text);border-color:rgba(255,255,255,.2);}
+.rtab.on{background:linear-gradient(135deg,var(--g1a),var(--g1b));border-color:transparent;color:#fff;font-weight:600;}
+.seg-wrap{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.seg{padding:4px 16px;border:none;border-right:1px solid var(--border);background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--muted);transition:all .12s;}
+.seg:last-child{border-right:none;}
+.seg:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.seg.on-all{background:linear-gradient(135deg,var(--g1a),var(--g1b));color:#fff;font-weight:600;}
+.seg.on-hm{background:linear-gradient(135deg,var(--g3a),var(--g3b));color:#fff;font-weight:600;}
+.seg.on-pr{background:linear-gradient(135deg,var(--g2a),var(--g2b));color:#fff;font-weight:600;}
+.srch-input{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--card2);font-family:inherit;font-size:12px;color:var(--text);outline:none;transition:border-color .15s;margin-left:auto;}
+.srch-input::placeholder{color:var(--muted);}
+.srch-input:focus{border-color:rgba(255,255,255,.25);}
+
+/* ─── Gradient stat cards ─────────────────────────────── */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.gcard{border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:5px;min-height:114px;}
+.gcard.g1{background:linear-gradient(135deg,var(--g1a),var(--g1b));}
+.gcard.g2{background:linear-gradient(135deg,var(--g2a),var(--g2b));}
+.gcard.g3{background:linear-gradient(135deg,var(--g3a),var(--g3b));}
+.gc-deco{position:absolute;right:-16px;top:-16px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none;}
+.gc-deco2{position:absolute;right:26px;bottom:-24px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;}
+.gc-arrow{position:absolute;right:16px;top:16px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.gc-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.8);}
+.gc-num{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums;}
+.gc-chg{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);margin-top:3px;}
+
+/* ─── Mid row: donut + goal ───────────────────────────── */
+.mid-row{display:grid;grid-template-columns:1fr 1.5fr;gap:14px;}
+.donut-card,.goal-card{background:var(--card);border-radius:var(--r);padding:18px 20px;}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.dc-body{display:flex;align-items:center;justify-content:center;}
+.dc-rel{position:relative;}
+.dc-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.dc-center-lbl{font-size:11px;color:var(--muted);font-weight:500;}
+.dc-center-num{font-size:24px;font-weight:800;color:var(--text);line-height:1.1;}
+.dc-legend{display:flex;flex-direction:column;gap:7px;margin-top:14px;}
+.dc-leg-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);}
+.dc-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dc-leg-val{margin-left:auto;font-weight:600;color:var(--text);}
+.goal-list{display:flex;flex-direction:column;gap:16px;}
+.goal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.goal-name{font-size:13px;color:var(--muted);font-weight:500;}
+.goal-pct{font-size:13px;font-weight:700;}
+.goal-track{height:6px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;}
+.goal-fill{height:100%;border-radius:999px;transition:width .7s cubic-bezier(.25,.46,.45,.94);}
+.goal-sub{font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* ─── Restaurant proj card ────────────────────────────── */
+.proj-card{background:var(--card);border-radius:var(--r);padding:18px 20px;}
+.proj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.proj-title{font-size:14px;font-weight:700;}
+.proj-link{font-size:11px;color:var(--muted);cursor:pointer;transition:color .12s;}
+.proj-link:hover{color:var(--text);}
+.proj-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--border);}
+.proj-ico{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.pi1{background:linear-gradient(135deg,var(--g1a),var(--g1b));}
+.pi2{background:linear-gradient(135deg,var(--g2a),var(--g2b));}
+.pi3{background:linear-gradient(135deg,var(--g3a),var(--g3b));}
+.pi4{background:linear-gradient(135deg,#a18cd1,#fbc2eb);}
+.proj-name{font-size:12px;font-weight:600;flex:1.4;min-width:0;}
+.proj-sub{font-size:11px;color:var(--muted);}
+.proj-count{font-size:12px;font-weight:700;flex:0 0 36px;text-align:center;}
+.proj-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.pb-green{background:linear-gradient(90deg,var(--g3a),var(--g3b));color:#fff;}
+.pb-blue{background:linear-gradient(90deg,var(--g2a),var(--g2b));color:#fff;}
+.pb-pink{background:linear-gradient(90deg,var(--g1a),var(--g1b));color:#fff;}
+.pb-muted{background:rgba(255,255,255,.07);color:var(--muted);}
+.proj-val{font-size:12px;font-weight:700;flex:0 0 50px;text-align:right;}
+
+/* ─── 수완제현황 breakdown ─────────────────────────────── */
+.hm-row{display:flex;flex-direction:column;gap:5px;padding:10px 0;border-top:1px solid var(--border);}
+.hm-head{display:flex;justify-content:space-between;align-items:center;}
+.hm-name{font-size:13px;font-weight:600;}
+.hm-nums{font-size:11px;color:var(--muted);}
+.hm-track{height:10px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;display:flex;}
+.hm-fill-hm{background:linear-gradient(90deg,var(--g3a),var(--g3b));border-radius:999px 0 0 999px;transition:width .5s;}
+.hm-fill-pr{background:linear-gradient(90deg,var(--g2a),var(--g2b));transition:width .5s;}
+.hm-fill-pr:last-child{border-radius:0 999px 999px 0;}
+.hm-pct-row{display:flex;justify-content:space-between;font-size:10px;font-weight:600;}
+
+/* ─── 품절 list ───────────────────────────────────────── */
+.so-view-wrap{display:flex;flex-direction:column;gap:6px;}
+.so-grp{margin-bottom:8px;}
+.so-grp:last-child{margin-bottom:0;}
+.so-grp-lbl{font-size:10px;color:var(--muted);font-weight:600;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.so-list{display:flex;flex-direction:column;gap:5px;}
+.soi{background:var(--card2);border-radius:8px;border:1px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:10px;}
+.sodot{width:7px;height:7px;border-radius:50%;background:var(--g1a);flex-shrink:0;}
+.so-info{flex:1;min-width:0;}
+.son{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sor{font-size:10px;color:var(--muted);margin-top:1px;}
+.so-det-time{font-size:10px;color:var(--g1a);font-weight:600;}
+.so-dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.so-dash-card{background:var(--card);border-radius:var(--r);padding:16px;}
+.so-meal-hdr{width:100%;display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;color:var(--text);transition:all .12s;text-align:left;}
+.so-meal-hdr:hover{border-color:rgba(255,255,255,.2);}
+.so-meal-hdr.open{border-color:rgba(255,107,157,.4);border-radius:9px 9px 0 0;background:rgba(255,107,157,.06);}
+.so-meal-arr{font-size:9px;color:var(--muted);width:12px;flex-shrink:0;}
+.so-meal-cnt{margin-left:auto;font-size:10px;font-weight:700;color:var(--g1a);}
+.so-meal-body{border:1px solid rgba(255,107,157,.3);border-top:none;border-radius:0 0 9px 9px;padding:8px;background:var(--card2);margin-bottom:8px;}
+.fill-pink{background:var(--g1a);}
+.mb{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap;}
+.mb-b{background:rgba(217,119,6,.15);color:var(--amber);}
+.mb-l{background:rgba(95,195,228,.15);color:var(--blue);}
+.mb-d{background:rgba(161,140,209,.15);color:#a18cd1;}
+
+/* ─── Menu group ──────────────────────────────────────── */
+.mg-wrap{display:flex;flex-direction:column;gap:5px;}
+.mg-grp{display:flex;flex-direction:column;}
+.mg-hdr{width:100%;display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-family:inherit;transition:all .12s;text-align:left;}
+.mg-hdr:hover{border-color:rgba(255,255,255,.2);}
+.mg-hdr.open{border-color:var(--g3a);border-radius:9px 9px 0 0;}
+.mg-arr{font-size:10px;color:var(--muted);width:10px;flex-shrink:0;}
+.mg-badge{font-size:11px;font-weight:700;color:var(--g3a);background:rgba(17,153,142,.12);padding:2px 7px;border-radius:5px;flex-shrink:0;}
+.mg-hdr.open .mg-badge{background:linear-gradient(90deg,var(--g3a),var(--g3b));color:#fff;}
+.mg-cnt{font-size:12px;color:var(--muted);}
+.mg-type{font-size:11px;font-weight:600;}
+.mg-body{border:1px solid var(--g3a);border-top:none;border-radius:0 0 9px 9px;padding:11px;background:var(--card2);}
+
+/* ─── Menu card grid ──────────────────────────────────── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;}
+.mc{background:var(--card2);border-radius:9px;border:1px solid var(--border);padding:11px;position:relative;display:flex;flex-direction:column;gap:5px;transition:border-color .12s,transform .12s;}
+.mc:hover{border-color:rgba(255,255,255,.18);transform:translateY(-1px);}
+.mc.so{opacity:.82;}
+.mc.so::after{content:'';position:absolute;inset:0;border-radius:9px;border:1.5px solid var(--g1a);pointer-events:none;}
+.mch{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;}
+.mcn{font-size:11.5px;font-weight:600;flex:1;line-height:1.4;}
+.mcn.sot{color:rgba(200,205,230,.85);text-decoration:line-through;}
+.badge{font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+.bh{background:rgba(56,239,125,.18);color:var(--g3b);}
+.bp{background:rgba(95,195,228,.18);color:var(--g2b);}
+.mcr{font-size:10px;color:var(--muted);}
+.sol{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(27,32,57,.45);}
+.sotag{background:var(--g1a);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;transform:rotate(-8deg);display:inline-block;}
+.badge-new{font-size:8px;font-weight:800;color:#fff;background:var(--g3a);padding:2px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;letter-spacing:.3px;flex-shrink:0;}
+.badge-new-month{background:#9B5DE5;}
+.bc-list-hdr{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-family:inherit;text-align:left;}
+.bc-list-hdr:hover .bc-list-title{color:var(--g1b);}
+.bc-list-title{font-size:14px;font-weight:700;color:var(--text);transition:color .12s;}
+.title-link{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:3px 9px;text-decoration:none;margin-left:8px;vertical-align:middle;transition:all .12s;}
+.title-link:hover{color:var(--text);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);}
+.dl-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:6px 13px;cursor:pointer;font-family:inherit;transition:all .12s;}
+.dl-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);}
+.mc-new{border-color:rgba(17,153,142,.35)!important;}
+.diff-bar{display:flex;align-items:center;gap:10px;padding:7px 12px;background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:10px;font-size:11.5px;}
+.diff-lbl{color:var(--muted);flex-shrink:0;}
+.diff-prog-wrap{flex:1;max-width:100px;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.diff-prog-fill{height:100%;background:var(--g3a);border-radius:3px;}
+.diff-new{color:var(--g3b);font-weight:700;flex-shrink:0;}
+.diff-pct{color:var(--g3b);font-size:10px;font-weight:400;margin-left:2px;}
+.sub-type-hdr{font-size:11px;font-weight:700;color:var(--muted);padding:2px 0 8px;display:flex;align-items:center;gap:5px;}
+.sub-hdr{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:0;color:inherit;display:flex;flex-direction:column;gap:5px;}
+.sub-opt-list{margin-top:7px;border-top:1px solid var(--border);padding-top:7px;display:flex;flex-direction:column;gap:5px;}
+.sub-opt{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 0;}
+.sub-opt-name{flex:1;font-weight:500;line-height:1.3;}
+.sub-opt-name.sot{color:rgba(200,205,230,.75);text-decoration:line-through;}
+.emp{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--muted);gap:8px;font-size:13px;}
+
+/* ─── TBD placeholder ─────────────────────────────────── */
+.tbd-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:70px 20px;background:var(--card);border-radius:var(--r);border:1px dashed var(--border);text-align:center;}
+.tbd-ico{font-size:52px;}
+.tbd-title{font-size:18px;font-weight:700;}
+.tbd-sub{font-size:13px;color:var(--muted);max-width:260px;line-height:1.7;}
+.tbd-chip{font-size:11px;font-weight:600;padding:5px 16px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--muted);margin-top:4px;}
+
+/* ─── Misc helpers ────────────────────────────────────── */
+.pct-cell{display:flex;align-items:center;gap:5px;}
+.pbar{width:44px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;flex-shrink:0;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:2px;}
+.fill-green{background:var(--g3b);}
+.fill-blue{background:var(--g2b);}
+.c-green{color:var(--g3b);}
+.c-blue{color:var(--g2b);}
+.c-red{color:var(--g1a);}
+.c-amber{color:var(--amber);}
+.rest-tbl-wrap{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);}
+.rest-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.rest-tbl th{padding:5px 12px;background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;text-align:left;font-size:10.5px;letter-spacing:.2px;border-bottom:1px solid var(--border);}
+.rest-tbl td{padding:7px 12px;border-top:1px solid var(--border);}
+.rest-tbl tr:hover td{background:var(--card2);}
+.rest-tbl .num{font-weight:700;font-size:13px;}
+
+/* ─── Bottom Nav (mobile only) ────────────────────────── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  height:60px;background:var(--bg);border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom,0px);align-items:stretch;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;border:none;background:none;cursor:pointer;font-family:inherit;
+  color:var(--muted);transition:color .15s;padding:6px 0;position:relative;}
+.bnav-item.active{color:var(--g1a);}
+.bnav-ico{font-size:18px;line-height:1;}
+.bnav-lbl{font-size:9px;font-weight:600;letter-spacing:-.2px;white-space:nowrap;}
+.bnav-badge{position:absolute;top:3px;right:calc(50% - 14px);min-width:14px;height:14px;
+  background:var(--g1a);color:#fff;font-size:8px;font-weight:700;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--bg);}
+
+/* ─── 품절 탭 & 누적분석 ─────────────────────────────────── */
+.so-tab-bar{display:flex;gap:6px;margin-bottom:14px;}
+.so-tab{flex:1;padding:8px 0;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:none;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.so-tab.active{background:linear-gradient(90deg,var(--g1a),var(--g1b));color:#1B2039;border-color:transparent;}
+.sh-period{padding:4px 12px;border:1px solid var(--border);border-radius:20px;background:none;
+  color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.sh-period.active{background:var(--g1a);color:#fff;border-color:transparent;}
+.sh-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.sh-row:last-child{border-bottom:none;}
+.sh-rank{font-size:11px;font-weight:700;color:var(--muted);width:18px;text-align:center;flex-shrink:0;}
+.sh-name{font-size:11px;font-weight:600;width:86px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sh-name-w{font-size:11px;font-weight:600;width:42px;flex-shrink:0;}
+.sh-name-lg{font-size:11px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sh-bwrap{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;min-width:0;}
+.sh-bar{height:100%;border-radius:3px;}
+.sh-bar-r{background:linear-gradient(90deg,var(--g1a),var(--g1b));}
+.sh-bar-m{background:linear-gradient(90deg,var(--g3a),var(--g3b));}
+.sh-bar-n{background:linear-gradient(90deg,var(--g2a),var(--g2b));}
+.sh-cnt{font-size:11px;font-weight:700;width:30px;text-align:right;flex-shrink:0;color:var(--text);}
+.sh-pct{font-size:10px;color:var(--muted);width:28px;text-align:right;flex-shrink:0;}
+.so-trend-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+.so-trend{display:flex;align-items:flex-end;gap:6px;min-width:min-content;padding-top:4px;}
+.so-trend-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;width:30px;}
+.so-trend-total{font-size:9px;font-weight:700;color:var(--muted);height:12px;line-height:12px;}
+.so-trend-stack{display:flex;flex-direction:column;justify-content:flex-end;width:16px;height:84px;}
+.so-trend-seg{width:100%;cursor:pointer;}
+.so-trend-seg:hover{filter:brightness(1.35);}
+.chart-tip{position:fixed;z-index:1000;background:#2A3153;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--text);pointer-events:none;display:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.so-trend-seg.sg-b{background:var(--amber);border-radius:2px 2px 0 0;}
+.so-trend-seg.sg-l{background:var(--g1a);}
+.so-trend-seg.sg-d{background:var(--g2b);}
+.so-trend-seg:last-child{border-radius:0 0 2px 2px;}
+.so-trend-seg:first-child{border-radius:2px 2px 0 0;}
+.so-trend-date{font-size:9px;color:var(--muted);white-space:nowrap;}
+.so-trend-date.sat{color:var(--blue);}
+.so-trend-date.sun{color:var(--red);}
+.so-legend{display:flex;gap:12px;margin-bottom:10px;}
+.so-legend span{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.so-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.sh-empty{font-size:12px;color:var(--muted);text-align:center;padding:20px 0;}
+.sh-row-btn{width:100%;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;color:inherit;text-align:left;}
+.sh-row-btn:hover{background:rgba(255,255,255,.03);}
+.sh-row-btn.open{border-bottom:none;}
+.sh-arr{font-size:8px;color:var(--muted);flex-shrink:0;width:12px;text-align:center;}
+.sh-detail{background:rgba(255,255,255,.03);border-radius:8px;padding:6px 10px;margin:0 0 7px 26px;border-bottom:1px solid var(--border);}
+.sh-detail-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:11px;border-bottom:1px dashed rgba(255,255,255,.06);}
+.sh-detail-row:last-child{border-bottom:none;}
+.sh-detail-date{color:var(--text);font-weight:600;width:58px;flex-shrink:0;}
+.sh-detail-meal{color:var(--muted);width:52px;flex-shrink:0;}
+.sh-detail-rest{color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;}
+.sh-detail-time{color:var(--g1a);font-weight:600;margin-left:auto;flex-shrink:0;}
+
+/* ─── 통합 대시보드 허브 iframe 임베드 모드 (?embed=1) — 허브 자체 사이드바와 중복되므로 우리 쪽은 숨김 ── */
+body.embed .sidebar,
+body.embed .bottom-nav{display:none !important;}
+body.embed .content{padding-bottom:20px !important;}
+
+/* ─── Mobile responsive ───────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{display:none !important;}
+  .bottom-nav{display:flex !important;}
+  .content{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px) + 12px);}
+  .topbar{padding:0 12px;gap:6px;}
+  .nav-time{display:none;}
+  .page-title{font-size:15px;}
+  .stat-row{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .mid-row{grid-template-columns:1fr;gap:10px;}
+  .filter-row{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:6px;padding-bottom:2px;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .rest-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .rest-tabs::-webkit-scrollbar{display:none;}
+  .so-dash-row{grid-template-columns:1fr !important;}
+  .tbi .nav-time{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="root">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-wrap">
+    <header class="topbar" id="hdr"></header>
+    <main class="content" id="main"></main>
+  </div>
+  <nav class="bottom-nav" id="bnav"></nav>
+</div>
+<script>
+'use strict';
+
+/* ============================================================
+   마스터 데이터
+   ============================================================ */
+const RESTS = [
+  { id:'r3-harmony', name:'R3 하모니(B1F)' },
+  { id:'r4-oasis',   name:'R4 오아시스(B1F)' },
+  { id:'r5-b1f',     name:'R5 B1F' },
+  { id:'r5-5f',      name:'R5 5F' },
+  { id:'together',   name:'투게더홀' },
+  { id:'family',     name:'패밀리홀' },
+  { id:'polaris',    name:'폴라리스홀' },
+];
+const MEALS  = ['breakfast','lunch','dinner'];
+const ML     = { breakfast:'아침', lunch:'점심', dinner:'저녁' };
+const MI     = { breakfast:'🌅', lunch:'☀️', dinner:'🌙' };
+const MB_CLS = { breakfast:'mb-b', lunch:'mb-l', dinner:'mb-d' };
+function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const TODAY  = localDateStr(new Date());
+
+const NAV = [
+  { view:'dashboard',   ico:'📊', lbl:'대시보드' },
+  { view:'menus',       ico:'📋', lbl:'메뉴현황' },
+  { view:'soldout',     ico:'🚨', lbl:'품절현황' },
+  { view:'handmade',    ico:'🍳', lbl:'수완제현황' },
+  { view:'brand',       ico:'🤝', lbl:'브랜드콜라보' },
+  { view:'performance', ico:'📈', lbl:'실적현황' },
+];
+
+/* ─── 직접 API 호출 상수 ────────────────────────────────── */
+const _API = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? '/v2/portal/dailyMenu'
+  : 'https://m.planeatchoice.net/v2/portal/dailyMenu';
+const _BC = 'RH3_K_001', _CC = 'K_KR_017';
+const _SC = 'CAF30,CAF33,CAF36,CAF37,CAF38,CAF04,CAF05';
+const _ME = {1:'breakfast',2:'lunch',3:'dinner'};
+const _SR = {CAF30:'r3-harmony',CAF33:'r4-oasis',CAF36:'r5-b1f',CAF37:'r5-5f',CAF38:'polaris',CAF04:'family',CAF05:'together'};
+const _SN = {CAF30:'R3 하모니(B1F)',CAF33:'R4 오아시스(B1F)',CAF36:'R5 B1F',CAF37:'R5 5F',CAF38:'폴라리스홀',CAF04:'패밀리홀',CAF05:'투게더홀'};
+
+/* ============================================================
+   유틸
+   ============================================================ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pct(n,d){return d?Math.round(n/d*100):0;}
+// 품절 비율 구간별 색상 (노랑→주황→핑크→빨강, 기존 g1a/g1b 그라데이션과 같은 계열)
+function soPctColor(p){return p>=15?'#E8434F':p>=10?'#FF6B9D':p>=5?'#FFA94D':'#FFE45E';}
+
+/* CSV 다운로드 (엑셀에서 바로 열림, 한글 깨짐 방지용 UTF-8 BOM 포함) */
+function downloadCSV(filename,headers,rows,summaryLines){
+  const q=v=>{const s=String(v??'');return/[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const lines=[];
+  if(summaryLines&&summaryLines.length){summaryLines.forEach(s=>lines.push([s]));lines.push([]);}
+  lines.push(headers,...rows);
+  const csv='﻿'+lines.map(r=>r.map(q).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function getDates(){
+  const base=new Date(TODAY+'T00:00:00');
+  return Array.from({length:7},(_,i)=>{const d=new Date(base);d.setDate(base.getDate()+i-3);return localDateStr(d);});
+}
+function fmtDate(s){const d=new Date(s+'T00:00:00');return{m:(d.getMonth()+1)+'/'+d.getDate(),dy:['일','월','화','수','목','금','토'][d.getDay()]};}
+function prevDateStr(s){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()-1);return localDateStr(d);}
+function normItemName(n){return n.replace(/^(\[[^\]]+\]\s*)+/,'').replace(/\(품절\)/g,'').replace(/\s+/g,'').toLowerCase();}
+function currentMeal(){
+  const t=new Date().getHours()*60+new Date().getMinutes();
+  if(t>=410&&t<=659)return'breakfast';if(t>=660&&t<=930)return'lunch';if(t>=931&&t<=1140)return'dinner';return'lunch';
+}
+function timeStr(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+
+const DATES=getDates();
+const ALL_MENUS=[];
+
+/* ============================================================
+   실시간 데이터
+   ============================================================ */
+let LIVE_DATA=null, LIVE_MENUS=[], SOLDOUT_LOG={};
+let DIFF_NEW_NAMES=new Set(), DIFF_CONTEXT_ACTIVE=false;
+let MONTH_NEW_NAMES=new Set(), MONTH_CONTEXT_ACTIVE=false;
+
+/* 브랜드콜라보 데이터 (Brandcollbo.xlsx에서 추출: [식당,연,월,일,끼니,메뉴명]) */
+const BRAND_DATA=[["r345",2025,4,"2","조","[하효맘]제주감귤과즐"],["r345",2025,4,"9","조","[신키네도]오렌지스타롤"],["r345",2025,4,"16","조","[창억떡]시그니처 3종 SET"],["r345",2025,4,"30","조","[명장텐]깜빠뉴"],["r345",2025,5,"7","조","[아벡쉐리]메론크림소금빵&드립백"],["r345",2025,5,"14","조","[민들레마음]마음도넛"],["r345",2025,5,"14","석","[미미네]떡볶이"],["r345",2025,5,"21","석","[두끼]떡볶이"],["r345",2025,5,"19","조","[유동커피]오라방"],["r345",2025,5,"20","조","[유동커피]하르방"],["r345",2025,5,"21","조","[유동커피]디카페인"],["r345",2025,5,"21","중","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,5,"21","중","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,5,"22","조","[유동커피]아주방"],["r345",2025,5,"23","조","[유동커피]월간커피"],["r345",2025,5,"28","조","[노아베이커리]먹쫀크&마들렌"],["r345",2025,5,"28","석","[도산분식]떡볶이"],["r345",2025,5,"28","중","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,6,"4","석","[미미네]떡볶이"],["r345",2025,6,"5","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,6,"11","조","[파스키에]팡오쇼콜라"],["r345",2025,6,"11","석","[두끼]떡볶이"],["r345",2025,6,"11","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,6,"18","조","[파스키에]팡올레"],["r345",2025,6,"18","석","[도산분식]떡볶이"],["r345",2025,6,"18","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,6,"19","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,6,"25","조","[우드앤브릭]플레인&밀크초코스콘"],["r345",2025,6,"25","석","[미미네]떡볶이"],["r345",2025,6,"25","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,6,"30","조","[정지영커피로스터즈]다크로스트"],["r345",2025,7,"1","조","[정지영커피로스터즈]다크로스트"],["r345",2025,7,"2","조","[정지영커피로스터즈]디카페인"],["r345",2025,7,"2","조","[김영모과자점]트위스트페스트리(R3,R4)"],["r345",2025,7,"2","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,7,"2","석","[두끼]떡볶이"],["r345",2025,7,"3","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,7,"3","조","[김영모과자점]트위스트페스트리(R5)"],["r345",2025,7,"3","조","[정지영커피로스터즈]마일드로스트"],["r345",2025,7,"4","조","[정지영커피로스터즈]마일드로스트"],["r345",2025,7,"7","조","[정지영커피로스터즈]다크로스트"],["r345",2025,7,"9","조","[여름프로모션]제주 소보루타르트"],["r345",2025,7,"9","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,7,"9","석","[도산분식]떡볶이"],["r345",2025,7,"16","조","[곤트란쉐리에블랑제리]올리브치아바타+퀸아망(R3,R4,R&D)"],["r345",2025,7,"16","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,7,"16","석","[미미네]떡볶이"],["r345",2025,7,"17","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,7,"17","조","[곤트란쉐리에블랑제리]올리브치아바타+퀸아망(R5)"],["r345",2025,7,"23","조","[바이웨이베이커스]휘낭시에(솔티+피칸)(R3,R4)"],["r345",2025,7,"23","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,7,"23","석","[두끼]떡볶이"],["r345",2025,7,"24","조","[바이웨이베이커스]휘낭시에(솔티+피칸)(R5)"],["r345",2025,7,"30","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,7,"30","석","[도산분식]떡볶이"],["r345",2025,7,"31","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,8,"6","조","[곤트란쉐리에블랑제리]올리브치아바타+뺑오쇼콜라(R5)"],["r345",2025,8,"6","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,8,"6","석","[미미네]떡볶이"],["r345",2025,8,"7","조","[곤트란쉐리에블랑제리]올리브치아바타+뺑오쇼콜라(R3,R4)"],["r345",2025,8,"13","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,8,"13","조","[바이웨이베이커스]휘낭시에(솔티+초코)(R3,R4,R5)"],["r345",2025,8,"13","석","[두끼]떡볶이"],["r345",2025,8,"14","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,8,"20","조","[마망갸또]마들렌세트(R3,R4,R5)"],["r345",2025,8,"20","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,8,"20","석","[도산분식]떡볶이"],["r345",2025,8,"25","조","[인텔리젠시아]블랙캣클래식"],["r345",2025,8,"26","조","[인텔리젠시아]블랙캣아날로그"],["r345",2025,8,"27","조","[인텔리젠시아]프렌치로스트"],["r345",2025,8,"27","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,8,"27","석","[미미네]떡볶이"],["r345",2025,8,"28","조","[인텔리젠시아]오스크로"],["r345",2025,8,"29","조","[인텔리젠시아]블랙캣클래식"],["r345",2025,9,"3","조","[곤트란쉐리에블랑제리]올리브치아바타+몽마르뜨(R3,R4)"],["r345",2025,9,"3","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,9,"3","석","[두끼]떡볶이"],["r345",2025,9,"4","조","[곤트란쉐리에블랑제리]올리브치아바타+몽마르뜨(R5)"],["r345",2025,9,"4","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,9,"10","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,9,"10","조","[바이웨이베이커스]휘낭시에(솔티+피칸)(R3,R4,R5)"],["r345",2025,9,"10","석","[도산분식]떡볶이"],["r345",2025,9,"11","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,9,"15","조","[런던베이글]무화과베이글(R3,R5)"],["r345",2025,9,"16","조","[런던베이글]블루베리베이글(R4,R5)"],["r345",2025,9,"17","조","[김영모과자점]트위스트페스트리(R5)"],["r345",2025,9,"17","조","[마망갸또]스콘세트(R3,R4)"],["r345",2025,9,"17","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,9,"17","석","[미미네]떡볶이"],["r345",2025,9,"18","조","[마망갸또]스콘세트(R5)"],["r345",2025,9,"18","조","[바이웨이베이커스]휘낭시에(솔티+초코)(R5)"],["r345",2025,9,"22","조","[보난자커피]다크로스트브라질"],["r345",2025,9,"23","조","[보난자커피]시티오베르잼그란데브라질"],["r345",2025,9,"24","조","[보난자커피]보난자블렌드브라질&페루"],["r345",2025,9,"24","조","[홍종흔베이커리]명장공주밤빵(R3,R4)"],["r345",2025,9,"25","조","[보난자커피]고고구에디오피아"],["r345",2025,9,"24","조","[홍종흔베이커리]명장공주밤빵(R5)"],["r345",2025,9,"24","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,9,"24","석","[두끼]떡볶이"],["r345",2025,9,"25","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,9,"26","조","[보난자커피]다크로스트브라질"],["r345",2025,10,"1","조","[김영모과자점]쑥떡쑥떡페스트리&스콘(R3,R4)"],["r345",2025,10,"1","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,10,"1","석","[도산분식]떡볶이"],["r345",2025,10,"2","조","[김영모과자점]쑥떡쑥떡페스트리&스콘(R5)"],["r345",2025,10,"15","조","[브릭샌드]브릭샌드세트(R3,R4,R5,R&D)"],["r345",2025,10,"15","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,10,"22","조","[홍종흔베이커리]명장공주밤빵(R3,R4)"],["r345",2025,10,"22","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,10,"22","석","[두끼분식]떡볶이"],["r345",2025,10,"23","조","[홍종흔베이커리]명장공주밤빵(R5)"],["r345",2025,10,"23","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,10,"27","조","[미니말레]Helsinki"],["r345",2025,10,"28","조","[미니말레]Balance"],["r345",2025,10,"29","조","[미니말레]Dunkel"],["r345",2025,10,"29","조","[바이웨이베이커스]휘낭시에(시그니처4구)(R3,R4,R5)"],["r345",2025,10,"29","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,10,"29","석","[미미네]떡볶이"],["r345",2025,10,"30","조","[미니말레]Olso"],["r345",2025,10,"30","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,10,"31","조","[미니말레]Helsinki"],["r345",2025,11,"5","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,11,"5","조","[브릭샌드] 브릭샌드 3종 4구 세트(R3,R4,R5)"],["r345",2025,11,"6","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,11,"12","조","애플크림떡"],["r345",2025,11,"12","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,11,"12","석","[두끼분식]떡볶이"],["r345",2025,11,"19","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,11,"19","조","[Bake]치즈타르트(R3,R4)"],["r345",2025,11,"19","조","[도나스데이]크림깨찰빵&딸기크림모찌(R5)"],["r345",2025,11,"19","석","[도산분식]떡볶이"],["r345",2025,11,"20","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,11,"20","조","[Bake]치즈타르트(R5)"],["r345",2025,11,"26","조","[도나스데이]크림깨찰빵2구(R3,R4,R5)"],["r345",2025,11,"26","조","[희망별숲]무화과파운드&황치즈휘낭시에(R5)"],["r345",2025,11,"27","석","[미미네]떡볶이"],["r345",2025,12,"1","조","[김성민커피]언더독"],["r345",2025,12,"3","조","[김성민커피]스위트퍼피"],["r345",2025,12,"3","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,12,"3","석","[두끼분식]떡볶이"],["r345",2025,12,"3","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R4)"],["r345",2025,12,"5","조","[김성민커피]디카페인"],["r345",2025,12,"8","중","[붕어유랑단]붕어빵(R5)/일주일간"],["r345",2025,12,"10","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,12,"10","석","[도산분식]떡볶이"],["r345",2025,12,"15","중","[붕어유랑단]붕어빵(R4)/일주일간"],["r345",2025,12,"17","조","[시오사쿠]탕종식빵(미니쇼쿠판)"],["r345",2025,12,"18","조","[희망별숲]무화과파운드&황치즈휘낭시에(R3)"],["r345",2025,12,"18","석","[미미네]떡볶이"],["r345",2025,12,"19","조","[희망별숲]무화과파운드&황치즈휘낭시에(R4)"],["r345",2025,12,"22","중","[붕어유랑단]붕어빵(R3)/일주일간"],["r345",2025,12,"24","조","[파리크라상]초코가달콤한시간(R3,R4,R5)"],["r345",2025,12,"24","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R5)"],["r345",2025,12,"24","석","[두끼분식]떡볶이"],["r345",2025,12,"31","조","[싸일러베이커리] 파운드케이크set"],["r345",2025,12,"31","조","[희망별숲]다크청크르뱅쿠키&황치즈휘낭시에(R3)"],["r345",2025,12,"31","석","[도산분식]떡볶이"],["r345",2026,1,"7","조","[연리희재]개성주악"],["r345",2026,1,"7","석","[미미네떡볶이]떡볶이"],["r345",2026,1,"14","석","[두끼] 떡볶이"],["r345",2026,1,"15","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,1,"21","조","[도나스데이]녹차크림도넛SET"],["r345",2026,1,"21","석","[도산분식]떡볶이"],["r345",2026,1,"28","조","[재신베이커리]바스크치즈케익"],["r345",2026,1,"28","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,1,"28","석","[미미네떡볶이]떡볶이"],["r345",2026,2,"4","조","[도나스데이]딸기모찌도나스&크림깨찰빵"],["r345",2026,2,"4","석","[두끼] 떡볶이"],["r345",2026,2,"11","조","[노티드]행운의말차만쥬"],["r345",2026,2,"11","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,2,"11","석","[도산분식]떡볶이"],["r345",2026,2,"23","조","[정지영커피] 다크로스트"],["r345",2026,2,"24","조","[정지영커피] 다크로스트"],["r345",2026,2,"25","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,2,"25","조","[정지영커피] 디카페인"],["r345",2026,2,"25","석","[미미네떡볶이]떡볶이"],["r345",2026,2,"26","조","[정지영커피] 미디엄로스트"],["r345",2026,2,"27","조","[정지영커피] 미디엄로스트"],["r345",2026,3,"4","조","[시오사쿠] 미니쇼쿠판(탕종식빵)"],["r345",2026,3,"11","석","[두끼] 떡볶이"],["r345",2026,3,"11","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,3,"18","석","[효뜨]돼지고기덮밥"],["r345",2026,3,"25","조/중/석","[노티드]딸기생크림도넛"],["r345",2026,3,"25","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,3,"25","석","[도산분식]떡볶이"],["r345",2026,3,"30","조/중/석","[홍루이젠]스페셜존"],["r345",2026,3,"30","조","[%아라비카] 아라비카원두"],["r345",2026,4,"2","조","[이성당]단팥빵&야채빵set"],["r345",2026,4,"8","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,4,"8","석","[미미네떡볶이]떡볶이"],["r345",2026,4,"9","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,4,"15","조","[OPS]학원전"],["r345",2026,4,"22","조/중/석","[노티드]말차라떼도넛"],["r345",2026,4,"22","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,4,"22","석","[두끼] 떡볶이"],["r345",2026,4,"23","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,4,"29","조","[만동제과]마늘바게트"],["r345",2026,5,"6","조","[겐츠베이커리]상투과자&파운드피스3종"],["r345",2026,5,"6","석","[효뜨]돼지고기덮밥"],["r345",2026,5,"7","조","[희망별숲C세트]다크청크르뱅쿠키+치즈스콘+데일리넛츠"],["r345",2026,5,"18","조","[the coffee] 화이트에디션"],["r345",2026,5,"20","석","[도산분식]떡볶이"],["r345",2026,5,"21","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,5,"22","조","[the coffee] 디카페인"],["r345",2026,5,"27","조","[OPS]학원전"],["r345",2026,6,"10","석","[미미네떡볶이]떡볶이"],["r345",2026,6,"17","조","[메종엠오] 시그니처 마들렌 SET"],["r345",2026,6,"18","조","[희망별숲D세트]레몬치즈파운드&크랜베리스콘&데일리넛츠"],["r345",2026,6,"24","조","[폴앤폴리나]블랙올리브&크랜베리스콘"],["r345",2026,6,"24","석","[두끼] 떡볶이"],["together",2025,4,"2","석","[60계치킨] 고추치킨"],["together",2025,4,"4","석","[고피자] 페퍼로니"],["together",2025,4,"9","석","[멕시카나] 뿌리고치킨"],["together",2025,4,"11","석","[고피자] 베이컨체다"],["together",2025,4,"16","석","[가마로강정] 매콤한맛"],["together",2025,4,"17","조/중/석","[뚜레쥬르 롤케이크]"],["together",2025,4,"18","석","[고피자] 미트치즈"],["together",2025,4,"23","석","[60계치킨] 호랑이치킨"],["together",2025,4,"23","조","[180로스터스 커피]"],["together",2025,4,"24","조","[180로스터스 커피]"],["together",2025,4,"25","석","[고피자] 옥수수"],["together",2025,4,"30","석","[멕시카나] 마요치킨"],["together",2025,5,"2","석","[고피자] 아임파인"],["together",2025,5,"7","석","[60계치킨] 후라이드"],["together",2025,5,"9","석","[고피자] 할라페뇨 페퍼로니"],["together",2025,5,"14","석","[가마로강정] 달콤한맛"],["together",2025,5,"15","조","[런던베이글] 프레첼, 바질"],["together",2025,5,"16","석","[고피자] 베이컨체다"],["together",2025,5,"21","석","[멕시카나] 땡초치킨"],["together",2025,5,"21","조","[빈브라더스 커피]"],["together",2025,5,"22","조","[빈브라더스 커피]"],["together",2025,5,"23","석","[고피자] 미트치즈"],["together",2025,5,"28","석","[60계치킨] 호랑이치킨"],["together",2025,5,"30","석","[고피자] 옥수수"],["together",2025,6,"4","석","[60계치킨] 고추치킨"],["together",2025,6,"11","석","[가마로강정] 매콤한맛"],["together",2025,6,"13","석","[고피자] 페퍼로니"],["together",2025,6,"18","중","[크리스피크림도넛] set"],["together",2025,6,"18","석","[60계치킨] 호랑이치킨"],["together",2025,6,"19","중","[투썸플레이스] 허니카스테라"],["together",2025,6,"20","석","[고피자] 아임파인"],["together",2025,6,"25","석","[멕시카나] 양념치킨"],["together",2025,6,"25","조","[프릳츠 커피]"],["together",2025,6,"26","조","[프릳츠 커피]"],["together",2025,6,"27","석","[고피자] 옥수수"],["together",2025,7,"2","석","[60계치킨] 간지치킨"],["together",2025,7,"4","석","[고피자] 베이컨체다"],["together",2025,7,"8","조","[투썸플레이스] 아이스박스"],["together",2025,7,"9","석","[가마로강정] 달콤한맛"],["together",2025,7,"11","석","[고피자] 미트치즈"],["together",2025,7,"16","석","[60계치킨] 후라이드"],["together",2025,7,"17","석","[보따리제과점 로띠번"],["together",2025,7,"18","석","[고피자]  할라페뇨 페퍼로니"],["together",2025,7,"23","석","[멕시카나] 모두의마요치킨"],["together",2025,7,"23","조","[펠트 커피]"],["together",2025,7,"24","조","[펠트 커피]"],["together",2025,7,"25","석","[고피자] 옥수수"],["together",2025,8,"1","석","[고피자] 아임파인"],["together",2025,8,"6","석","[60계치킨] 고추치킨"],["together",2025,8,"8","석","[고피자] 허니고르곤졸라"],["together",2025,8,"13","석","[가마로강정] 매콤한맛"],["together",2025,8,"20","석","[멕시카나] 땡초치킨"],["together",2025,8,"20","조","[런던베이글] 바질"],["together",2025,8,"20","조","[빈브라더스 커피]"],["together",2025,8,"21","조","[빈브라더스 커피]"],["together",2025,8,"22","석","[고피자] 슈퍼콤비"],["together",2025,8,"27","석","[60계치킨] 호랑이치킨"],["together",2025,8,"29","석","[고피자] 베이컨포테이토"],["together",2025,9,"3","석","[60계치킨] 간지치킨"],["together",2025,9,"5","석","[고피자] 할라페뇨 페퍼로니"],["together",2025,9,"10","석","[멕시카나] 뿌리고치킨"],["together",2025,9,"12","석","[고피자] 허니고르곤졸라"],["together",2025,9,"17","석","[가마로강정] 달콤한맛"],["together",2025,9,"18","석","[보따리제과점 메론빵"],["together",2025,9,"18","석","[연리희재 개성주악"],["together",2025,9,"19","석","[고피자] 슈퍼콤비"],["together",2025,9,"24","석","[멕시카나] 양념치킨"],["together",2025,9,"26","석","[고피자] 베이컨포테이토"],["together",2025,9,"29","중","[프랑제리피어 사과빵"],["together",2025,10,"1","석","[60계치킨] 후라이드"],["together",2025,10,"10","석","[고피자] 베이컨체다"],["together",2025,10,"15","석","[멕시카나] 간장치킨"],["together",2025,10,"17","석","[고피자] 슈퍼콤비"],["together",2025,10,"21","조","[왓어브레드 휘낭시에 SET"],["together",2025,10,"22","석","[가마로강정] 매콤한맛"],["together",2025,10,"22","조","[펠트 커피]"],["together",2025,10,"23","조","[펠트 커피]"],["together",2025,10,"24","석","[고피자] 베이컨포테이토"],["together",2025,10,"29","석","[60계치킨] 호랑이치킨"],["together",2025,10,"31","석","[고피자] 미트치즈"],["together",2025,11,"5","석","[60계치킨] 고추치킨"],["together",2025,11,"7","석","[고피자] 허니고르곤졸라"],["together",2025,11,"11","중","[복호두] 앙버터, 딸기"],["together",2025,11,"12","석","[가마로강정] 달콤한맛"],["together",2025,11,"14","석","[고피자] 할라페뇨 페퍼로니"],["together",2025,11,"19","조","[빈브라더스 커피]"],["together",2025,11,"19","석","[멕시카나] 양념치킨"],["together",2025,11,"20","조","[빈브라더스 커피]"],["together",2025,11,"21","석","[고피자] 베이컨포테이토"],["together",2025,11,"26","석","[60계치킨] 간지치킨"],["together",2025,11,"28","석","[고피자] 슈퍼콤비"],["together",2025,12,"3","석","[60계치킨] 후라이드"],["together",2025,12,"5","석","[고피자] 베이컨체다"],["together",2025,12,"10","석","[멕시카나] 땡초치킨"],["together",2025,12,"12","석","[고피자] 미트치즈"],["together",2025,12,"17","석","[가마로강정] 달콤한맛"],["together",2025,12,"17","조","[프릳츠 커피]"],["together",2025,12,"18","조","[프릳츠 커피]"],["together",2025,12,"19","석","[고피자] 슈퍼콤비네이션"],["together",2025,12,"23","중","[너구리베이글] 명란쪽파"],["together",2025,12,"24","석","[60계치킨] 호랑이치킨"],["together",2025,12,"26","석","[고피자] 허니고르곤졸라"],["together",2025,12,"31","석","[60계] 간지치킨"],["together",2026,1,"2","석","[고피자] 오리지널 페퍼로니"],["together",2026,1,"14","석","[가마로강정] 매콤한맛"],["together",2026,1,"16","석","[고피자] 할라페뇨 페퍼로니"],["together",2026,1,"20","중","[왓어브레드] 휘낭시에 SET"],["together",2026,1,"21","조","[빈브라더스 커피]"],["together",2026,1,"21","석","[멕시카나] 양념치킨"],["together",2026,1,"22","조","[빈브라더스 커피]"],["together",2026,1,"23","석","[고피자] 베이컨포테이토"],["together",2026,1,"28","석","[60계] 후라이드"],["together",2026,1,"30","석","[고피자] 옥수수"],["together",2026,2,"4","석","[60계] 호랑이"],["together",2026,2,"6","석","[고피자] 고르곤졸라"],["together",2026,2,"11","석","[가마로강정] 달콤한맛"],["together",2026,2,"13","석","[고피자] 아임파인"],["together",2026,2,"20","석","[고피자] 콤비네이션"],["together",2026,2,"24","중","[복호두] 앙버터, 딸기"],["together",2026,2,"25","석","[멕시카나] 뿌리고치킨"],["together",2026,2,"27","석","[고피자] 미트칠리"],["together",2026,3,"4","석","[고메 소바바 SET"],["together",2026,3,"6","석","[고피자] 베이컨체다"],["together",2026,3,"11","석","[가마로강정] 매콤한맛"],["together",2026,3,"6","석","[고피자] 허니고르곤졸라"],["together",2026,3,"18","석","[멕시카나] 땡초치킨"],["together",2026,3,"20","석","[고피자] 슈퍼콤비네이션"],["together",2026,3,"23","중","[보따리제과] 메론빵"],["together",2026,3,"25","석","[60계] 간지치킨"],["together",2026,3,"27","석","[고피자] 베이컨포테이토"],["together",2026,4,"1","석","[60계] 후라이드"],["together",2026,4,"3","석","[고피자] 고르곤졸라"],["together",2026,4,"8","중","[랜디스도넛] 글레이즈크론디,커피크럼도넛"],["together",2026,4,"8","석","[멕시카나] 양념치킨"],["together",2026,4,"9","중","[보따리제과점] 버터떡"],["together",2026,4,"10","석","[고피자] 베이컨포테이토"],["together",2026,4,"15","석","[60계치킨] 간지치킨"],["together",2026,4,"17","석","[고피자] 슈퍼콤비네이션"],["together",2026,4,"22","석","[가마로강정] 달콤한맛"],["together",2026,4,"23","조","[프릿츠커피]"],["together",2026,4,"24","조","[프릿츠커피]"],["together",2026,4,"24","석","[고피자] 옥수수"],["together",2026,4,"29","석","[60계] 호랑이치킨"],["together",2026,5,"6","석","[60계] 고추치킨"],["together",2026,5,"8","석","[고피자] 허니고르곤졸라"],["together",2026,5,"13","석","[멕시카나] 뿌리고치킨"],["together",2026,5,"15","석","[고피자] 베이컨포테이토"],["together",2026,5,"20","석","[가마로강정] 매콤한맛"],["together",2026,5,"20","조","[빈브라더스 커피]"],["together",2026,5,"21","조","[빈브라더스 커피]"],["together",2026,5,"22","석","[고피자] 슈퍼콤비네이션"],["together",2026,5,"27","석","[60계치킨] 후라이드"],["together",2026,5,"29","석","[고피자] 베이컨체다"],["together",2026,6,"5","석","[고피자] 아임파인"],["together",2026,6,"10","석","[가마로강정] 달콤한맛"],["together",2026,6,"12","석","[고피자] 허니고르곤졸라"],["together",2026,6,"17","중","[왓어브레드 초코크로찌"],["together",2026,6,"17","석","[60계치킨] 호랑이치킨"],["together",2026,6,"19","석","[고피자] 베이컨포테이토"],["family",2025,4,"8,15,22,29","조/중","[필라델피아크림]치즈 베를리너 도넛"],["family",2025,4,"10,24","조/중","[창억떡]"],["family",2025,4,"8~10","조","[뷰엔사보르] 에티오피아 유기농원두"],["family",2025,4,"17","조","[연리희재] 개성주악"],["family",2025,4,"22~24","조","[코나웨이브] 원두커피"],["family",2025,5,"13,20,27","조/중","[이학순베이커리] 모카크로와상&땅콩크로와상"],["family",2025,5,"13~15","조/중","[뷰엔사보르] 에티오피아 유기농 원두"],["family",2025,5,"27~29","조/중","[모모스] 부산 원두"],["family",2025,5,"15","조","[연리희재] 개성주악"],["family",2025,5,"16,30","조","[필라델피아크림치즈] 베를리너 도넛"],["family",2025,6,"24","조","[키토빵앗간] 플레인휘낭시에"],["family",2025,6,"11,25","조","[나따오비카] 에그타르트(플레인or초코)"],["family",2025,6,"10~12","조/중","[뷰엔사보르] 마일드 블랜딩 원두"],["family",2025,6,"24~26","조/중","[할리스] 에스프레소 클래식 블랜드"],["family",2025,6,"18","조","[노티드] 시그니처우유,바닐라,라즈베리"],["family",2025,7,"8~10","조","[코나웨이브] 원두커피"],["family",2025,7,"16,30","조","[베이크모굴] 버터소금베이글"],["family",2025,7,"23","조","[나따오비까] 타르트"],["family",2025,7,"21~23","조","[자연트레이딩] 케냐AA원두"],["family",2025,8,"6,20","조","[워커힐] 고메 아란차티라미슈"],["family",2025,8,"13","조","[베이크모굴] 더블치즈버터소금베이글"],["family",2025,8,"12~14","조/중","[모모스] 므쵸베리 원두"],["family",2025,8,"27","석","[고피자]"],["family",2025,8,"26~28","조/중","[베키아에누보] 하우스 블랜딩 원두"],["family",2025,9,"3","조","[워커힐 고메] 아란차티라미슈"],["family",2025,9,"10","조","[고수록] 크림떡 플레인,딸기,초코"],["family",2025,9,"9~11","조/중","[히포커피]"],["family",2025,9,"17","조","[테디뵈르하우스] 뵈르크로와상"],["family",2025,9,"16~18","조/중","[뷰엔사보르] 에티오피아 유기농 원두"],["family",2025,9,"24","조","[연리희재] 개성주악"],["family",2025,10,"1","조","[베이크모굴] 버터소금베이글"],["family",2025,10,"16","조","[고피자] 미트치즈피자"],["family",2025,10,"14~16","조","[퍼팩트 밸런스] 원두"],["family",2025,10,"22","조","[시오사쿠] 미니쇼쿠판"],["family",2025,10,"29","조","[테디뵈르하우스] 뵈르크로와상"],["family",2025,10,"28~30","조","[히포커피]"],["family",2025,11,"5","조","[연리희재] 개성주악"],["family",2025,11,"12","조","[외계인방앗간] 올리브쌀빵"],["family",2025,11,"11~13","조","[뷰엔사보르] 에티오피아 유기농원두"],["family",2025,11,"18","조","[워커힐 고메] 아란차티라미슈"],["family",2025,11,"19","조","[이웃집통통이] 쫀득빵 3종(우유,초코,치즈)"],["family",2025,11,"26","조","[외계인방앗간] 순쌀모닝빵"],["family",2025,11,"25~27","조","[히포 커피] 과테말라"],["family",2025,12,"3","조","[베이크모굴] 버터소금베이글"],["family",2025,12,"10","조","[이웃집통통이] 쫀득빵 3종(우유,초코,치즈)"],["family",2025,12,"8~12","조/중","[뷰엔사보르] 에티오피아 유기농 원두"],["family",2025,12,"17","조","[몰리하우스] 부들이 SET"],["family",2025,12,"24","조","[몰리하우스] 부들이 SET"],["family",2025,12,"23~24","조","[히포 커피] 파라이소 92"],["family",2025,12,"31","조","[이웃집통통이] 쫀득빵 3종(우유,초코,치즈)"],["family",2026,1,"7","조","[시오사쿠] 미니쇼쿠판"],["family",2026,1,"14","석","[고피자] 체다페파로니피자(1인 피자)"],["family",2026,1,"21","조","[몰랑이수] 앙몰랑 4종"],["family",2026,1,"28","조","[테디뵈르] 뵈르크로아상"],["family",2026,1,"13~15","조/중","[보사노바] 미드나잇 블렌드 원두"],["family",2026,1,"27~29","조/중","[보사노바] 하프문 블렌드 원두"],["family",2026,2,"4,11","조/중","[데이도트] 휘낭시에3종"],["family",2026,2,"10~12","조/중","[히포 커피] 스테이블랜드원두"],["family",2026,3,"4,25","조/중","[데이도트] 마들렌 3종"],["family",2026,3,"11","조/중","[올드페리도넛] 2종"],["family",2026,3,"25","조","[데이도트] 마들렌 3종"],["family",2026,3,"10~12","조/중","[보사노바] 풀문 원두"],["family",2026,3,"24~26","조/중","[블루보틀] 밸런스 원두"],["family",2026,4,"1","조","[올드페리도넛] 2종"],["family",2026,4,"7~9","조/중","[엘까페딸 블랑] 원두"],["family",2026,4,"8","조","[코코호도]"],["family",2026,4,"15","조","[베이크모굴]"],["family",2026,4,"29","조","[코코호도]"],["family",2026,4,"21~23","조/중","[히포 커피] 오후의 잠 원두"],["family",2026,5,"13","조","[김성민커피] 바스크치즈케이크"],["family",2026,5,"12~14","조/중","[김성민커피] 언더독블랜드"],["family",2026,5,"19~21","조/중","[팀홀튼] 오리지널블랜드"],["family",2026,5,"20","조/중","[이성당]"],["family",2026,5,"27","조/중","[시오사쿠]"],["family",2026,6,"10","조/중","[라미블랑제리]  뺑 오 쇼콜라"],["family",2026,6,"17","조/중","[고려당] 단팥빵"],["family",2026,6,"24","조/중","[김성민커피] 스위트퍼피 원두"],["family",2026,6,"24","조/중","[김성민커피] 바스크치즈케이크"],["polaris",2026,1,"5","조","[바이웨이]솔티&피스타치오 휘낭시에"],["polaris",2026,1,"7","석","[고피자] 옥수수크런치피자"],["polaris",2026,1,"19~23","조","[커피위크]김성민커피"],["polaris",2026,1,"27","석","[프랭크버거]프랭크치즈버거"],["polaris",2026,2,"4","석","[고피자] 불닭치킨피자"],["polaris",2026,2,"10~12","조","[커피위크] 정지영로스터리커피_아메리카노"],["polaris",2026,2,"10~12","조","[커피위크] 정지영로스터리커피_코코넛커피"],["polaris",2026,2,"24","석","[프랭크버거] 통새우버거"],["polaris",2026,2,"26","중/석","[베스킨라빈스] 엄마는외계인/아몬드봉봉/스트로베리"],["polaris",2026,3,"4","석","[고피자] 고르곤졸라피자"],["polaris",2026,3,"10","석","[스테프핫도그] 불고기핫도그"],["polaris",2026,3,"18","석","[석관동떡볶이] 기름떡볶이"],["polaris",2026,3,"25","석","[도제식빵] 타마고산도"],["polaris",2026,4,"1","석","[고피자] 달콤 고구마 피자"],["polaris",2026,4,"15","석","[스테프핫도그] 치폴레핫도그"],["polaris",2026,4,"22","석","[태극당] 단팥빵"],["polaris",2026,4,"29","석","[도제식빵] 새우산도"],["polaris",2026,5,"6","석","[고피자] 핫슈림프피자"],["polaris",2026,5,"12","석","[성심당] 튀김소보로&튀소구마"],["polaris",2026,5,"18~22","조","[김성민커피] 언더독&스위트퍼피&디카페인"],["polaris",2026,5,"27","석","[스테프핫도그] 오리진 핫도그"],["polaris",2026,6,"9","석","[고피자] 갈릭포테이토피자"],["polaris",2026,6,"17","중/석","[태극당] 모나카 아이스크림(찹쌀,우유,초코)"],["polaris",2026,6,"26","석","[자담치킨] 맵슐랭 치킨"],["polaris",2026,6,"30","석","[스테프핫도그] 오리진 핫도그"]];
+
+/* 신규메뉴 판정용 누적 이력 (localStorage) — { date: { rid: { meal: [정규화된 이름,...] } } } */
+let MENU_HIST={};
+function loadMenuHist(){
+  try{MENU_HIST=JSON.parse(localStorage.getItem('mealhub_menuhist')||'{}');}catch(e){MENU_HIST={};}
+}
+function saveMenuHist(items){
+  loadMenuHist();
+  const today=localDateStr(new Date());
+  for(const it of items){
+    if(it.date>today)continue; // 미래(예정) 날짜는 아직 확정 아님 → 기록 안 함
+    if(!MENU_HIST[it.date])MENU_HIST[it.date]={};
+    if(!MENU_HIST[it.date][it.rid])MENU_HIST[it.date][it.rid]={};
+    const cur=MENU_HIST[it.date][it.rid][it.meal];
+    const set=cur?new Set(cur):new Set();
+    set.add(normItemName(it.name));
+    MENU_HIST[it.date][it.rid][it.meal]=[...set];
+  }
+  // 95일보다 오래된 날짜는 정리 (localStorage 용량 관리, 이력조회 90일 표기 + 여유 5일)
+  const cutoff=(()=>{const d=new Date();d.setDate(d.getDate()-95);return localDateStr(d);})();
+  for(const date of Object.keys(MENU_HIST)){if(date<cutoff)delete MENU_HIST[date];}
+  try{localStorage.setItem('mealhub_menuhist',JSON.stringify(MENU_HIST));}catch(e){}
+}
+function menuHistDaysCovered(){
+  const today=localDateStr(new Date());
+  return Object.keys(MENU_HIST).filter(d=>d<today).length;
+}
+/* 기준일(refDate) 이전 최근 30일 안에 해당 식당·끼니에서 등장한 적 있는지 확인 */
+function seenInLast30Days(rid,meal,normName,refDate){
+  refDate=refDate||localDateStr(new Date());
+  const cutoff=(()=>{const d=new Date(refDate+'T00:00:00');d.setDate(d.getDate()-30);return localDateStr(d);})();
+  for(const[date,byRid] of Object.entries(MENU_HIST)){
+    if(date>=refDate||date<cutoff)continue;
+    if((byRid[rid]?.[meal]||[]).includes(normName))return true;
+  }
+  return false;
+}
+function newMenuDates(){
+  const base=new Date();
+  return[0,1,2].map(off=>{const d=new Date(base);d.setDate(d.getDate()+off);return localDateStr(d);});
+}
+/* 신규메뉴 탭에서 선택된 날짜(오늘/내일/모레) 기준으로 신규 메뉴 필터 */
+function newMenuFiltered(){
+  const date=S.newMenuDate||TODAY;
+  return LIVE_MENUS.filter(m=>
+    m.date===date&&m.meal===S.meal&&
+    (S.restaurant==='all'||m.rid===S.restaurant)&&
+    !seenInLast30Days(m.rid,m.meal,normItemName(m.name),date)
+  );
+}
+
+// API의 updatedAt("YYYY-MM-DD HH:MM:SS")에서 시:분만 추출 — 서버 저장값이라 어느 PC에서 봐도 동일
+function apiTimeHHMM(updatedAt){
+  const m=/(\d{2}):(\d{2})/.exec(String(updatedAt||''));
+  return m?`${m[1]}:${m[2]}`:null;
+}
+function soDetectedAt(it){
+  if(it.soApiTime)return it.soApiTime; // API 실제 처리시각 우선 (브라우저별로 달라지지 않음)
+  const key=`${it.rid}|${it.meal}|${it.name}`;
+  return(SOLDOUT_LOG[it.date||S.date]||{})[key]?.detectedAt||null;
+}
+function timeToMin(t){if(!t)return null;const[h,m]=(t+'').split(':').map(Number);return isNaN(h)||isNaN(m)?null:h*60+m;}
+// '품절 발생 시간대' 구간 — 끼니별 실제 시각 범위 (UI 카드·엑셀 다운로드 공통 기준)
+const SO_TIME_BUCKETS={
+  breakfast:[['06:50','07:30'],['07:30','08:00'],['08:00','08:30'],['08:30','09:00'],['09:00',null]],
+  lunch:[['11:00','11:30'],['11:30','12:00'],['12:00','12:30'],['12:30','13:00'],['13:00',null]],
+  dinner:[['16:30','17:00'],['17:00','17:30'],['17:30','18:00'],['18:00','18:30'],['18:30',null]],
+};
+const SO_TIME_BUCKET_TAGS=['오픈 직후','30분 후','1시간 후','1.5시간 후','2시간+'];
+function soTimeBucketIndex(meal,detectedAt){
+  const buckets=SO_TIME_BUCKETS[meal];
+  const d=timeToMin(detectedAt);
+  if(!buckets||d===null)return-1;
+  for(let i=0;i<buckets.length;i++){
+    const to=buckets[i][1];
+    if(!to||d<timeToMin(to))return i;
+  }
+  return buckets.length-1;
+}
+function soTimeBucketLabel(meal,detectedAt){
+  const idx=soTimeBucketIndex(meal,detectedAt);
+  if(idx<0)return'';
+  const[from,to]=SO_TIME_BUCKETS[meal][idx];
+  return`${SO_TIME_BUCKET_TAGS[idx]}(${from}~${to||''})`;
+}
+
+const FRUIT_NAMES=new Set(['자몽','사과','바나나','딸기','포도','배','복숭아','수박','멜론','오렌지','키위','블루베리','망고','레몬','감','귤','파인애플','체리','참외','석류','무화과','살구','자두','라임','리치','용과']);
+// [Main2]/[2Coin] 항목 중 베이커리 키워드 포함 시 수제로 분류
+const _BAKERY_PFX=/^\[(?:Main\s*2|2Coin)\]/;
+const _BAKERY_KW=/빵|머핀|크라상|크루아상|바게트|브레드|베이글|도넛|케이크|파이|페스츄리|패스츄리|쿠키|스콘|마들렌|브리오슈|토스트/;
+function isBakeryItem(name){return _BAKERY_PFX.test(name)&&_BAKERY_KW.test(name);}
+// 품절 누적로그는 type을 따로 저장하지 않으므로, 실시간 분류와 동일한 이름 기반 규칙으로 수제/완제 판정
+function soMenuTypeLabel(name){return(name.includes('[수제]')||isFruitItem(name)||isBakeryItem(name))?'수제':'완제';}
+function isFruitItem(name){
+  const s=name.replace(/^\[[^\]]+\]\s*/,'').replace(/\(품절\)/g,'').trim();
+  if(s.includes('과일'))return true;
+  for(const f of FRUIT_NAMES){
+    if(s===f)return true;
+    if(s.startsWith(f)&&s.length>f.length&&'(+'.includes(s[f.length]))return true;
+    if(s===f+' 팩')return true;
+  }
+  return false;
+}
+
+function applyLiveData(data){
+  if(!data||!data.items||!data.items.length)return;
+  LIVE_DATA=data;
+  LIVE_MENUS=data.items.map((item,i)=>({
+    id:`live-${item.date}-${item.meal}-${i}`,
+    rid:item.rid, date:item.date, meal:item.meal, name:item.name,
+    type:(item.isHandmade||isFruitItem(item.name))?'handmade':'processed',
+    isSO:item.isSoldOut, kcal:item.kcal||0, subItems:item.subItems||[],
+    soApiTime:item.soApiTime||null,
+  }));
+  const liveDates=[...new Set(data.items.map(it=>it.date))].sort();
+  liveDates.forEach(d=>{if(!DATES.includes(d))DATES.push(d);});
+  DATES.sort();
+  const baseDate=data.baseDate||liveDates[liveDates.length-1];
+  if(baseDate)S.date=baseDate;
+  S.meal=currentMeal();
+}
+
+function loadSoldoutLog(){
+  try{SOLDOUT_LOG=JSON.parse(localStorage.getItem('mealhub_so')||'{}');}catch(e){SOLDOUT_LOG={};}
+}
+
+function saveSoldoutCache(items){
+  loadSoldoutLog();
+  const now=new Date().toTimeString().slice(0,5);
+  const today=localDateStr(new Date());
+  for(const it of items){
+    if(!it.isSoldOut)continue;
+    if(it.date>today)continue; // 미래 날짜는 기록 안 함 (어제 로드 시 오늘 날짜에 잘못된 시각 기록 방지)
+    const key=`${it.rid}|${it.meal}|${it.name}`;
+    if(!SOLDOUT_LOG[it.date])SOLDOUT_LOG[it.date]={};
+    if(it.soApiTime){
+      // API 실제 처리시각은 항상 최신값으로 갱신 (서버 저장값이라 브라우저 무관하게 동일)
+      SOLDOUT_LOG[it.date][key]={detectedAt:it.soApiTime};
+    }else if(!SOLDOUT_LOG[it.date][key]){
+      SOLDOUT_LOG[it.date][key]={detectedAt:now};
+    }
+  }
+  try{localStorage.setItem('mealhub_so',JSON.stringify(SOLDOUT_LOG));}catch(e){}
+}
+
+// '품절' 텍스트는 (품절)/[품절]/*품절 등 감싸는 기호나 위치 무관하게 인식 — 판정 후 제거된 이름으로 반환
+function stripSO(raw){
+  const hasSO=/품절/.test(raw);
+  const clean=raw
+    .replace(/[\(\[]품절[\)\]]/g,'')
+    .replace(/^\*?품절\s*/,'')
+    .replace(/품절/g,'')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+  return{clean,hasSO};
+}
+
+async function fetchDayMeal(dateStr,mealCd,storCd){
+  const p=new URLSearchParams({itemFg:'',packFg:'',today:new Date().toUTCString(),
+    saleDt:dateStr,listType:'card',orderType:'new',mealCd:String(mealCd),
+    busiCd:_BC,compCd:_CC,storCd:storCd});
+  const r=await fetch(`${_API}?${p}`,{headers:{'Accept':'application/json, text/plain, */*'},referrerPolicy:'no-referrer'});
+  if(!r.ok)return[];
+  const raw=await r.json();
+  const all=Array.isArray(raw)?raw:(raw.ds||raw.data||raw.result||raw.list||raw.body||raw.items||[]);
+  // API가 같은 그룹(대표품목 기준)을 하루 중 서로 다른 시점 스냅샷 두 개로 중복 전송하는 경우가 있음
+  // (예: 요거트 맛 옵션 1개, 품절 여부 1개만 다른 채로 통째로 재전송) — mainNm+itemNmDp가 같으면 같은 그룹으로
+  // 보고 하위옵션을 합쳐서 1건으로 처리한다. 서로 다른 그룹이 사이드 메뉴 이름만 우연히 겹치는 정상 케이스는
+  // mainNm/itemNmDp 자체가 다르므로 여기 걸리지 않아 그대로 각자 보존된다.
+  const groupBySig=new Map();
+  const rawFiltered=all.filter(it=>(it.cnrNm||'').trim().toLowerCase().startsWith('take out')&&!(it.mainNm||'').startsWith('[BEVERAGE]'));
+  const takeout=[];
+  for(const it of rawFiltered){
+    const sig=`${it.mainNm}||${it.itemNmDp}`;
+    const prev=groupBySig.get(sig);
+    if(prev){
+      const seenSub=new Set((prev.dailySubMenuDtos||[]).map(s=>s.subItemNmDp||s.subItemNm||''));
+      for(const s of(it.dailySubMenuDtos||[])){
+        const nm=s.subItemNmDp||s.subItemNm||'';
+        if(!seenSub.has(nm)){(prev.dailySubMenuDtos=prev.dailySubMenuDtos||[]).push(s);seenSub.add(nm);}
+      }
+      continue;
+    }
+    groupBySig.set(sig,it);
+    takeout.push(it);
+  }
+  const items=[];
+  for(const it of takeout){
+    const rawName=it.mainNm||it.itemNmDp||'';
+    const{clean:name,hasSO:mainSO}=stripSO(rawName);
+    if(!name||name==='테이크아웃')continue;
+    const subs=it.dailySubMenuDtos||[];
+    // 하위옵션(외 N종)이 있는 경우 mainNm/soldOutYn은 대표 품목 1개만을 가리키므로
+    // 그룹 전체(모든 하위옵션)에 전파하면 안 됨 — 하위옵션 없는 단일 품목에서만 이 신호를 신뢰
+    // (하위옵션이 있으면 각 옵션 자신의 '(품절)' 표기만으로 개별 판정)
+    const isSoldOut=subs.length===0&&(it.soldOutYn==='Y'||mainSO);
+    const sc=it.storCd||storCd;
+    const c={date:dateStr,meal:_ME[mealCd],rid:_SR[sc]||'r-unknown',restaurant:_SN[sc]||it.storNm||'',cnrNm:it.cnrNm||''};
+    // 그룹 여부는 "외 N종" 문구가 아니라 실제 dailySubMenuDtos 존재 여부로 판단 —
+    // 브랜드콜라보 등 자유 형식 mainNm("'A | B'")은 "외 N종" 문구가 없어도 하위옵션이 있을 수 있음
+    const _PFX=/^\[(?:Main\s*\d+|\d+Coin)\]/;
+    const hasMainSubs=subs.length>0&&subs.some(s=>_PFX.test(stripSO(s.subItemNmDp||'').clean));
+    const parentApiTime=apiTimeHHMM(it.updatedAt);
+    if(hasMainSubs){
+      // 부모 itemNmDp를 첫 번째 아이템으로 추가 (포털 상세보기의 대표 항목)
+      const parentDpR=stripSO(it.itemNmDp||'');
+      if(parentDpR.clean&&_PFX.test(parentDpR.clean)){
+        items.push({...c,name:parentDpR.clean,subItems:[],kcal:it.calorie||it.totCalorie||0,
+          isSoldOut:parentDpR.hasSO||isSoldOut,soApiTime:parentApiTime,
+          isHandmade:parentDpR.clean.includes('[수제]')||isFruitItem(parentDpR.clean)||isBakeryItem(parentDpR.clean)});
+      }
+      // 나머지 sub-items — [Main N]/[NCoin] prefix 없는 항목(소스류 등) 제외
+      for(const sub of subs){
+        const subR=stripSO(sub.subItemNmDp||sub.subItemNm||'');
+        if(!subR.clean||!_PFX.test(subR.clean))continue;
+        items.push({...c,name:subR.clean,subItems:[],kcal:sub.calorie||0,isSoldOut:subR.hasSO||isSoldOut,soApiTime:apiTimeHHMM(sub.updatedAt)||parentApiTime,isHandmade:subR.clean.includes('[수제]')||isFruitItem(subR.clean)||isBakeryItem(subR.clean)});
+      }
+    }else if(subs.length>0){
+      // 패밀리홀 스타일: 그룹핑 prefix 없음 → 대표 품목(itemNmDp) + sub-items 전체 표시 (각 항목이 실제 선택지)
+      const subCleaned=subs.map(sub=>stripSO(sub.subItemNmDp||sub.subItemNm||'').clean);
+      const parentDpR=stripSO(it.itemNmDp||'');
+      if(parentDpR.clean&&!subCleaned.includes(parentDpR.clean)){
+        items.push({...c,name:parentDpR.clean,subItems:[],kcal:it.calorie||it.totCalorie||0,
+          isSoldOut:parentDpR.hasSO||isSoldOut,soApiTime:parentApiTime,
+          isHandmade:parentDpR.clean.includes('[수제]')||isFruitItem(parentDpR.clean)||isBakeryItem(parentDpR.clean)});
+      }
+      for(const sub of subs){
+        const subR=stripSO(sub.subItemNmDp||sub.subItemNm||'');
+        if(!subR.clean)continue;
+        items.push({...c,name:subR.clean,subItems:[],kcal:sub.calorie||0,isSoldOut:subR.hasSO||isSoldOut,soApiTime:apiTimeHHMM(sub.updatedAt)||parentApiTime,isHandmade:subR.clean.includes('[수제]')||isFruitItem(subR.clean)||isBakeryItem(subR.clean)});
+      }
+    }else{
+      // itemNmDp에 그룹핑 prefix가 있으면 사용 (투게더홀 등 mainNm에 prefix 없는 경우)
+      const dpR=stripSO(it.itemNmDp||'');
+      const useDp=dpR.clean&&_PFX.test(dpR.clean);
+      const dispName=useDp?dpR.clean:name;
+      // 독립 단품(하위옵션 없는 최상위 레코드)은 [Main N]/[NCoin] 태그가 없어도 실제 메뉴로 인정
+      // (패밀리홀 DELI/브랜드콜라보 품목 등은 이 태그 체계를 안 씀) — 단, "[2Pick]"처럼
+      // 대괄호 라벨만 있고 실제 메뉴명이 없는 미완성 항목만 제외
+      if(!dispName||/^\[[^\]]*\]$/.test(dispName))continue;
+      items.push({...c,name:dispName,subItems:[],kcal:it.calorie||it.totCalorie||0,isSoldOut:isSoldOut||(useDp&&dpR.hasSO),soApiTime:parentApiTime,isHandmade:dispName.includes('[수제]')||isFruitItem(dispName)||isBakeryItem(dispName)});
+    }
+  }
+  // '오늘의 선식' 류 총정리 그룹 등이 다른 그룹의 품목을 그대로 다시 담아 같은 이름이 중복 생성되는 경우 정리 —
+  // 같은 식당·끼니·날짜 안에서 이름이 같으면 하나로 합치고, 품절 신호는 우선 보존
+  const dedup=new Map();
+  for(const it of items){
+    const prev=dedup.get(it.name);
+    if(!prev||(!prev.isSoldOut&&it.isSoldOut))dedup.set(it.name,it);
+  }
+  return[...dedup.values()];
+}
+
+async function loadLiveData(){
+  const btn=document.getElementById('btn-refresh');
+  if(btn){btn.textContent='…';btn.disabled=true;}
+  try{
+    const base=new Date();
+    const dates=Array.from({length:9},(_,i)=>{const d=new Date(base);d.setDate(d.getDate()-6+i);return localDateStr(d);});
+    const stores=_SC.split(',');
+    // storCd에 여러 식당을 한 번에 넘기면 API 응답이 잘리므로 식당별로 개별 호출 (9일×3끼니×7식당)
+    const allItems=(await Promise.all(dates.flatMap(d=>[1,2,3].flatMap(m=>stores.map(sc=>fetchDayMeal(d,m,sc).catch(()=>[])))))).flat();
+    allItems.sort((a,b)=>a.date!==b.date?(a.date<b.date?-1:1):({breakfast:0,lunch:1,dinner:2}[a.meal]||0)-({breakfast:0,lunch:1,dinner:2}[b.meal]||0));
+    if(allItems.length){
+      applyLiveData({lastUpdated:new Date().toISOString(),baseDate:localDateStr(base),items:allItems});
+      saveSoldoutCache(allItems);
+      saveMenuHist(allItems);
+      render();
+    }
+  }catch(e){}finally{if(btn){btn.textContent='↻';btn.disabled=false;}}
+}
+
+/* ============================================================
+   상태
+   ============================================================ */
+// 통합 대시보드 허브에 iframe으로 임베드될 때 ?view=xxx&embed=1 로 초기 화면·임베드 모드를 전달받음
+const _urlParams=new URLSearchParams(location.search);
+const _embedView=_urlParams.get('view');
+if(_urlParams.get('embed')==='1')document.body.classList.add('embed');
+const S={date:TODAY,meal:currentMeal(),restaurant:'all',type:'all',query:'',view:(NAV.some(n=>n.view===_embedView)?_embedView:'dashboard'),soTab:'today',soHistDays:30,soHistRest:'all',hmTab:'dashboard',bcRest:'all',bcMeal:'all',bcYear:0,bcMonth:0,menuTab:'all',newMenuDate:TODAY,histQuery:'',histSel:'',histRest:'all',histMeal:'all'};
+const GROUP_OPEN={};
+let SO_MENU_OPEN=null;
+const SO_MEAL_OPEN={};
+function set(upd){Object.assign(S,upd);if(upd.view&&upd.view!=='menus')S.query='';render();}
+
+/* ============================================================
+   데이터 셀렉터
+   ============================================================ */
+function baseMeals(){
+  const sample=ALL_MENUS.filter(m=>m.date===S.date&&m.meal===S.meal);
+  const live=LIVE_MENUS.filter(m=>m.date===S.date&&m.meal===S.meal);
+  return[...sample,...live];
+}
+function filtered(){
+  return baseMeals().filter(m=>
+    (S.restaurant==='all'||m.rid===S.restaurant)&&
+    (S.type==='all'||m.type===S.type)&&
+    (S.query===''||m.name.includes(S.query))
+  );
+}
+function restStats(){
+  const base=baseMeals().filter(m=>S.restaurant==='all'||m.rid===S.restaurant);
+  const total=base.length,hm=base.filter(m=>m.type==='handmade').length,pr=base.filter(m=>m.type==='processed').length,so=base.filter(m=>m.isSO).length;
+  return{total,hm,pr,so,hmPct:pct(hm,total),prPct:pct(pr,total)};
+}
+function soldOutFiltered(){
+  return[...ALL_MENUS,...LIVE_MENUS]
+    .filter(m=>m.isSO&&m.date===S.date&&(S.restaurant==='all'||m.rid===S.restaurant))
+    .sort((a,b)=>(a.meal||'').localeCompare(b.meal||''));
+}
+function exportSoldoutToday(){
+  const items=soldOutFiltered();
+  const rows=items.map(it=>{
+    const rn=(RESTS.find(r=>r.id===it.rid)||{}).name||it.rid;
+    const detAt=soDetectedAt(it)||'';
+    return[it.date,rn,ML[it.meal]||it.meal,it.type==='handmade'?'수제':'완제',it.name,detAt,soTimeBucketLabel(it.meal,detAt)];
+  });
+  const selRestName=S.restaurant==='all'?'전체식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  downloadCSV(`품절현황_오늘현황_${S.date}_${selRestName}.csv`,['날짜','식당','끼니','구분','메뉴명','감지시각','품절발생시간대'],rows);
+}
+function mealStats(){
+  return MEALS.map(ml=>{
+    const its=[...ALL_MENUS,...LIVE_MENUS].filter(m=>m.date===S.date&&m.meal===ml&&(S.restaurant==='all'||m.rid===S.restaurant));
+    const hm=its.filter(m=>m.type==='handmade').length;
+    return{meal:ml,total:its.length,hm,so:its.filter(m=>m.isSO).length};
+  });
+}
+
+/* ============================================================
+   공통 렌더 헬퍼
+   ============================================================ */
+function extractPrefix(name){const m=name.match(/^\[([^\]]+)\]/);return m?m[1]:null;}
+const _TYPE_PFXS=new Set(['수제','완제','BEVERAGE']);
+function hasCoinPrefix(name){const p=extractPrefix(name);return!!p&&!_TYPE_PFXS.has(p);}
+
+function pbarHTML(p,cls){
+  return`<div class="pct-cell"><div class="pbar"><div class="pbar-fill ${cls}" style="width:${p}%"></div></div><span class="${cls==='fill-green'?'c-green':'c-blue'}">${p}%</span></div>`;
+}
+
+function donutSVG(segs,size){
+  const R=size*.37,cx=size/2,cy=size/2,CIRC=2*Math.PI*R;
+  const total=segs.reduce((a,s)=>a+s.val,0);
+  if(!total)return`<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="18"/></svg>`;
+  let rot=-90,html='';
+  for(const seg of segs){
+    if(!seg.val)continue;
+    const frac=seg.val/total,dash=CIRC*frac,gap=CIRC-dash;
+    html+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="18" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" transform="rotate(${rot} ${cx} ${cy})"/>`;
+    rot+=frac*360;
+  }
+  return`<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${html}</svg>`;
+}
+
+function cardHTML(it){
+  const rn=(RESTS.find(r=>r.id===it.rid)||{}).name||'';
+  const kcal=it.kcal?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${it.kcal}kcal</span>`:'';
+  const isDayNew=DIFF_CONTEXT_ACTIVE&&DIFF_NEW_NAMES.has(normItemName(it.name));
+  const isMonthNew=MONTH_CONTEXT_ACTIVE&&MONTH_NEW_NAMES.has(normItemName(it.name));
+  const isNew=isDayNew||isMonthNew;
+  const newBadge=isMonthNew?'<span class="badge-new badge-new-month">NEW</span>':isDayNew?'<span class="badge-new">NEW</span>':'';
+  if(it.subItems&&it.subItems.length>0){
+    const key=`s__${it.rid}__${it.meal}__${it.date}__${(it.name||'').replace(/\W/g,'_')}`;
+    const isOpen=!!GROUP_OPEN[key];
+    const soCount=it.subItems.filter(s=>s.isSoldOut).length;
+    const subListHTML=it.subItems.map(s=>{
+      const sk=s.kcal?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${s.kcal}kcal</span>`:'';
+      return`<div class="sub-opt${s.isSoldOut?' so':''}">
+        <span class="sub-opt-name${s.isSoldOut?' sot':''}">${esc(s.name)}</span>
+        ${s.isSoldOut?'<span class="sotag" style="font-size:9px;padding:2px 6px">품절</span>':''}${sk}
+      </div>`;
+    }).join('');
+    return`<div class="mc${it.isSO?' so':''}${isNew?' mc-new':''}">
+      <button class="sub-hdr" data-grp="${esc(key)}">
+        <div class="mch"><span style="font-size:9px;margin-right:2px;opacity:.7">${isOpen?'▼':'▶'}</span><div class="mcn${it.isSO?' sot':''}">${esc(it.name)}</div>
+        ${newBadge}<span class="badge ${it.type==='handmade'?'bh':'bp'}">${it.type==='handmade'?'수제':'완제'}</span></div>
+        <div class="mcr">${esc(rn)} · ${it.subItems.length}종${kcal}${soCount?` · <span style="color:var(--g1a)">품절 ${soCount}</span>`:''}</div>
+      </button>
+      ${isOpen?`<div class="sub-opt-list">${subListHTML}</div>`:''}
+    </div>`;
+  }
+  return`<div class="mc${it.isSO?' so':''}${isNew?' mc-new':''}">
+    <div class="mch"><div class="mcn${it.isSO?' sot':''}">${esc(it.name)}</div>
+    ${newBadge}<span class="badge ${it.type==='handmade'?'bh':'bp'}">${it.type==='handmade'?'수제':'완제'}</span></div>
+    <div class="mcr">${esc(rn)}${kcal}</div>
+    ${it.isSO?'<div class="sol"><span class="sotag">품절</span></div>':''}
+  </div>`;
+}
+
+/* 메뉴 카드 정렬: 1) 수제 → 완제, 2) 가나다 순 (앞쪽 [태그]는 제외하고 비교) */
+function menuSortName(n){return n.replace(/^(\[[^\]]+\]\s*)+/,'').trim();}
+function menuSortCmp(a,b){
+  if(a.type!==b.type)return a.type==='handmade'?-1:1;
+  return menuSortName(a.name).localeCompare(menuSortName(b.name),'ko');
+}
+
+function groupedMenuHTML(items,ns=''){
+  const prefixOrder=[],groups={},noPrefix=[];
+  items.forEach(it=>{
+    const p=extractPrefix(it.name);
+    if(p){if(!groups[p]){groups[p]=[];prefixOrder.push(p);}groups[p].push(it);}
+    else noPrefix.push(it);
+  });
+  prefixOrder.sort((a,b)=>b.localeCompare(a,undefined,{numeric:true}));
+  if(!prefixOrder.length)return`<div class="grid">${items.slice().sort(menuSortCmp).map(cardHTML).join('')}</div>`;
+  let html='<div class="mg-wrap">';
+  prefixOrder.forEach(prefix=>{
+    const key=ns+prefix;
+    const its=groups[prefix].sort(menuSortCmp),isOpen=!!GROUP_OPEN[key];
+    const soC=its.filter(it=>it.isSO).length,hmC=its.filter(it=>it.type==='handmade').length,prC=its.filter(it=>it.type==='processed').length;
+    html+=`<div class="mg-grp">
+      <button class="mg-hdr${isOpen?' open':''}" data-grp="${esc(key)}">
+        <span class="mg-arr">${isOpen?'▼':'▶'}</span>
+        <span class="mg-badge">${esc(prefix)}</span>
+        <span class="mg-cnt">${its.length}개</span>
+        <span class="mg-type c-green">수제 ${hmC}</span>
+        <span class="mg-type c-blue">완제 ${prC}</span>
+        ${soC?`<span class="mg-type c-red">· 품절 ${soC}</span>`:''}
+      </button>
+      ${isOpen?`<div class="mg-body"><div class="grid">${its.map(it=>cardHTML({...it,name:it.name.replace(/^\[[^\]]+\]\s*/,'')})).join('')}</div></div>`:''}
+    </div>`;
+  });
+  if(noPrefix.length)html+=`<div class="grid" style="margin-top:7px">${noPrefix.sort(menuSortCmp).map(cardHTML).join('')}</div>`;
+  html+='</div>';
+  return html;
+}
+
+function restTableHTML(){
+  const base=[...ALL_MENUS,...LIVE_MENUS].filter(m=>m.date===S.date&&m.meal===S.meal);
+  const rows=RESTS.map(r=>{const its=base.filter(m=>m.rid===r.id);const total=its.length,hm=its.filter(m=>m.type==='handmade').length,pr=total-hm,so=its.filter(m=>m.isSO).length;return{name:r.name,total,hm,pr,so,hmPct:pct(hm,total)};}).filter(r=>r.total>0);
+  if(!rows.length)return'';
+  return`<div class="rest-tbl-wrap"><table class="rest-tbl">
+    <thead><tr><th>식당</th><th>전체</th><th>수제</th><th>완제</th><th>품절</th><th>수제 비율</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="num">${r.total}</td><td class="num c-green">${r.hm}</td><td class="num c-blue">${r.pr}</td><td class="num${r.so>0?' c-red':''}">${r.so||'-'}</td><td>${pbarHTML(r.hmPct,'fill-green')}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+/* 필터바 HTML 생성 */
+function filterBarHTML(opts={}){
+  const{showMeal=false,showDate=false,showType=false,showSearch=false}=opts;
+  const segCls=v=>S.type!==v?'':v==='all'?' on-all':v==='handmade'?' on-hm':' on-pr';
+  let html=`<div class="filter-bar">
+    <div class="filter-row">
+      <span class="ctrl-lbl">식당</span>
+      <div class="rest-tabs">
+        <button class="rtab${S.restaurant==='all'?' on':''}" data-rest="all">전체</button>
+        ${RESTS.map(r=>`<button class="rtab${S.restaurant===r.id?' on':''}" data-rest="${r.id}">${esc(r.name)}</button>`).join('')}
+      </div>
+    </div>`;
+  if(showMeal){
+    html+=`<div class="filter-row"><span class="ctrl-lbl">끼니</span><div class="rest-tabs">
+      ${MEALS.map(ml=>`<button class="rtab${S.meal===ml?' on':''}" data-fb-meal="${ml}">${MI[ml]} ${ML[ml]}</button>`).join('')}
+    </div></div>`;
+  }
+  if(showDate){
+    html+=`<div class="filter-row"><span class="ctrl-lbl">날짜</span><div class="rest-tabs">
+      ${DATES.map(d=>{const{m,dy}=fmtDate(d);return`<button class="rtab${S.date===d?' on':''}" data-fb-date="${d}">${m}(${dy})</button>`;}).join('')}
+    </div></div>`;
+  }
+  if(showType||showSearch){
+    html+=`<div class="filter-row">`;
+    if(showType){
+      html+=`<span class="ctrl-lbl">구분</span><div class="seg-wrap">
+        <button class="seg${segCls('all')}" data-type="all">전체</button>
+        <button class="seg${segCls('handmade')}" data-type="handmade">수제</button>
+        <button class="seg${segCls('processed')}" data-type="processed">완제</button>
+      </div>`;
+    }
+    if(showSearch)html+=`<input class="srch-input" id="view-srch" placeholder="🔍 메뉴 검색..." value="${esc(S.query)}">`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+/* 필터 이벤트 바인딩 */
+function bindFilterEvents(){
+  document.querySelectorAll('[data-rest]').forEach(b=>b.addEventListener('click',()=>set({restaurant:b.dataset.rest})));
+  document.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',()=>set({type:b.dataset.type})));
+  document.querySelectorAll('[data-fb-meal]').forEach(b=>b.addEventListener('click',()=>set({meal:b.dataset.fbMeal})));
+  document.querySelectorAll('[data-fb-date]').forEach(b=>b.addEventListener('click',()=>set({date:b.dataset.fbDate})));
+  const srch=document.getElementById('view-srch');
+  if(srch)srch.addEventListener('input',e=>{S.query=e.target.value;updateMenuBody();});
+}
+
+/* 그룹 토글 이벤트 바인딩 */
+function bindGroupEvents(){
+  document.querySelectorAll('[data-grp]').forEach(b=>b.addEventListener('click',()=>{GROUP_OPEN[b.dataset.grp]=!GROUP_OPEN[b.dataset.grp];renderMain();}));
+}
+
+/* 뷰 이동 이벤트 바인딩 */
+function bindGoView(){
+  document.querySelectorAll('[data-go-view]').forEach(b=>b.addEventListener('click',()=>set({view:b.dataset.goView})));
+}
+
+/* ============================================================
+   뷰: 대시보드
+   ============================================================ */
+function renderViewDashboard(){
+  const st=restStats(),soItems=soldOutFiltered(),ms=mealStats();
+  const maxT=Math.max(...ms.map(m=>m.total),1);
+  const soPct=pct(soItems.length,st.total);
+  const selRestName=S.restaurant==='all'?'전체 식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  const{m:dm,dy}=fmtDate(S.date);
+  const titleHTML=`<div><div class="page-title">Dashboard</div><div class="page-sub">${dm}(${dy}) · ${esc(selRestName)} · ${MI[S.meal]} ${ML[S.meal]}</div></div>`;
+
+  const statRowHTML=`<div class="stat-row">
+    <div class="gcard g1"><div class="gc-deco"></div><div class="gc-deco2"></div>
+      <div class="gc-arrow">↑</div><div class="gc-lbl">전체 메뉴</div>
+      <div class="gc-num">${st.total}</div>
+      <div class="gc-chg">수제 ${st.hm} · 완제 ${st.pr}</div>
+    </div>
+    <div class="gcard g2"><div class="gc-deco"></div><div class="gc-deco2"></div>
+      <div class="gc-arrow">🍳</div><div class="gc-lbl">수제 메뉴</div>
+      <div class="gc-num">${st.hm}</div>
+      <div class="gc-chg">전체의 ${st.hmPct}%</div>
+    </div>
+    <div class="gcard g3"><div class="gc-deco"></div><div class="gc-deco2"></div>
+      <div class="gc-arrow">${soItems.length>0?'↓':'✓'}</div><div class="gc-lbl">품절 현황</div>
+      <div class="gc-num">${soItems.length}</div>
+      <div class="gc-chg">${soPct}% 품절 · 전체 ${st.total}개</div>
+    </div>
+  </div>`;
+
+  const D=148;
+  const donutCardHTML=`<div class="donut-card">
+    <div class="card-title">메뉴 구성 현황</div>
+    <div class="dc-body"><div class="dc-rel">
+      ${donutSVG([{val:st.hm,color:'#38EF7D'},{val:st.pr,color:'#5FC3E4'}],D)}
+      <div class="dc-inner"><div class="dc-center-lbl">${ML[S.meal]} 전체</div><div class="dc-center-num">${st.total}</div></div>
+    </div></div>
+    <div class="dc-legend">
+      <div class="dc-leg-item"><div class="dc-leg-dot" style="background:#38EF7D"></div>수제<span class="dc-leg-val">${st.hm}개 (${st.hmPct}%)</span></div>
+      <div class="dc-leg-item"><div class="dc-leg-dot" style="background:#5FC3E4"></div>완제<span class="dc-leg-val">${st.pr}개 (${st.prPct}%)</span></div>
+      <div class="dc-leg-item"><div class="dc-leg-dot" style="background:#FF6B9D;opacity:.8"></div>품절<span class="dc-leg-val" style="color:var(--g1a)">${soItems.length}개 (전체의 ${soPct}%)</span></div>
+    </div>
+  </div>`;
+
+  const goalGrads=['linear-gradient(90deg,var(--g1a),var(--g1b))','linear-gradient(90deg,var(--g2a),var(--g2b))','linear-gradient(90deg,var(--g3a),var(--g3b))'];
+  const goalColors=['var(--amber)','var(--blue)','var(--green)'];
+  const goalCardHTML=`<div class="goal-card">
+    <div class="card-title">끼니별 현황 — ${esc(selRestName)}</div>
+    <div class="goal-list">${ms.map((m,i)=>`
+      <div>
+        <div class="goal-head"><span class="goal-name">${MI[m.meal]} ${ML[m.meal]}</span><span class="goal-pct" style="color:${goalColors[i]}">${m.total}개</span></div>
+        <div class="goal-track"><div class="goal-fill" style="width:${pct(m.total,maxT)}%;background:${goalGrads[i]}"></div></div>
+        <div class="goal-sub">수제 ${m.hm} · 완제 ${m.total-m.hm}${m.so>0?` · <span style="color:var(--g1a)">품절 ${m.so}</span>`:''}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  const base4rest=[...ALL_MENUS,...LIVE_MENUS].filter(m=>m.date===S.date&&m.meal===S.meal);
+  const icoC=['pi1','pi2','pi3','pi4','pi1','pi2','pi3'],icoE=['🍱','🥘','🍛','🍲','🥗','🍜','🥙'];
+  const restRows=RESTS.map((r,i)=>{
+    const its=base4rest.filter(m=>m.rid===r.id);if(!its.length)return'';
+    const hm=its.filter(m=>m.type==='handmade').length,pr=its.filter(m=>m.type==='processed').length,so=its.filter(m=>m.isSO).length;
+    const bCls=so>0?'pb-pink':'pb-blue',bTxt=`품절 ${so}`;
+    return`<div class="proj-row">
+      <div class="proj-ico ${icoC[i]}">${icoE[i]}</div>
+      <div style="flex:1.4;min-width:0"><div class="proj-name">${esc(r.name)}</div><div class="proj-sub">수제 ${hm} · 완제 ${pr}</div></div>
+      <div class="proj-count">${its.length}</div>
+      <div class="proj-badge ${bCls}">${bTxt}</div>
+      <div class="proj-val" style="color:${so>0?'var(--g1a)':'inherit'}">${pct(so,its.length)}%<span style="font-size:10px;color:var(--muted);font-weight:400"> 품절</span></div>
+    </div>`;
+  }).join('');
+  const projHTML=`<div class="proj-card">
+    <div class="proj-header">
+      <div class="proj-title">식당별 현황</div>
+      <div class="proj-link" data-go-view="menus">메뉴 목록 보기 →</div>
+    </div>
+    ${restRows||'<div class="emp" style="padding:18px">데이터 없음</div>'}
+  </div>`;
+
+  document.getElementById('main').innerHTML=titleHTML+filterBarHTML({showMeal:true,showDate:true})+statRowHTML+`<div class="mid-row">${donutCardHTML}${goalCardHTML}</div>`+projHTML;
+  bindFilterEvents();
+  bindGoView();
+}
+
+/* ============================================================
+   뷰: 메뉴현황
+   ============================================================ */
+function menuBodyHTML(){
+  const items=filtered();
+  if(items.length===0) return`<div class="emp">해당 조건의 메뉴가 없습니다.</div>`;
+  if(items.some(it=>extractPrefix(it.name))){
+    if(S.restaurant==='all'){
+      const byRest={};
+      items.forEach(it=>{(byRest[it.rid]=byRest[it.rid]||[]).push(it);});
+      return RESTS.filter(r=>byRest[r.id]&&byRest[r.id].length).map(r=>`
+        <div style="margin-bottom:18px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">
+            ${esc(r.name)} <span style="font-size:11px;font-weight:400;color:var(--muted)">${byRest[r.id].length}개</span>
+          </div>
+          ${groupedMenuHTML(byRest[r.id],r.id+'::')}
+        </div>`).join('');
+    }
+    return groupedMenuHTML(items);
+  }
+  if(S.type==='all'){
+    const hmI=items.filter(it=>it.type==='handmade').sort(menuSortCmp),prI=items.filter(it=>it.type==='processed').sort(menuSortCmp);
+    return`
+      ${hmI.length?`<div class="sub-type-hdr"><span class="c-green">● 수제</span>&nbsp;${hmI.length}개</div><div class="grid">${hmI.map(cardHTML).join('')}</div>`:''}
+      ${prI.length?`<div class="sub-type-hdr" style="margin-top:12px"><span class="c-blue">● 완제</span>&nbsp;${prI.length}개</div><div class="grid">${prI.map(cardHTML).join('')}</div>`:''}`;
+  }
+  return`<div class="grid">${items.slice().sort(menuSortCmp).map(cardHTML).join('')}</div>`;
+}
+function updateMenuBody(){
+  const el=document.getElementById('menu-body');
+  if(!el)return;
+  el.innerHTML=menuBodyHTML();
+  bindGroupEvents();
+}
+function computeDayDiff(){
+  if(S.restaurant==='all'){DIFF_NEW_NAMES=new Set();return null;}
+  const match=m=>m.meal===S.meal&&m.rid===S.restaurant;
+  const todayItems=LIVE_MENUS.filter(m=>m.date===S.date&&match(m));
+  if(!todayItems.length)return null;
+  const prevDate=[...new Set(LIVE_MENUS.filter(m=>m.date<S.date&&match(m)).map(m=>m.date))]
+    .filter(d=>new Date(d+'T00:00:00').getDay()!==6)
+    .sort().pop();
+  if(!prevDate)return null;
+  const prevItems=LIVE_MENUS.filter(m=>m.date===prevDate&&match(m));
+  if(!prevItems.length)return null;
+  const todaySet=new Set(todayItems.map(m=>normItemName(m.name)));
+  const prevSet=new Set(prevItems.map(m=>normItemName(m.name)));
+  DIFF_NEW_NAMES=new Set(todayItems.filter(m=>!prevSet.has(normItemName(m.name))).map(m=>normItemName(m.name)));
+  return{newCount:DIFF_NEW_NAMES.size,totalToday:todaySet.size,prevDate};
+}
+
+function renderViewMenus(){
+  const menuTabBar=`<div class="so-tab-bar">
+    <button class="so-tab${S.menuTab==='all'?' active':''}" data-menutab="all">전체 메뉴</button>
+    <button class="so-tab${S.menuTab==='new'?' active':''}" data-menutab="new">신규 메뉴</button>
+    <button class="so-tab${S.menuTab==='history'?' active':''}" data-menutab="history">이력조회</button>
+  </div>`;
+  if(S.menuTab==='new'){renderNewMenuTab(menuTabBar);return;}
+  if(S.menuTab==='history'){renderMenuHistoryTab(menuTabBar);return;}
+  renderAllMenusTab(menuTabBar);
+}
+
+function exportMenusAll(){
+  const items=filtered();
+  const selRestName=S.restaurant==='all'?'전체식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  const rows=items.map(it=>{
+    const rn=(RESTS.find(r=>r.id===it.rid)||{}).name||it.rid;
+    return[it.date,rn,ML[it.meal]||it.meal,it.name,it.type==='handmade'?'수제':'완제',it.isSO?'품절':'',it.kcal||''];
+  });
+  downloadCSV(`메뉴현황_전체메뉴_${S.date}_${selRestName}.csv`,['날짜','식당','끼니','메뉴명','구분','품절여부','칼로리'],rows,[`전체 메뉴수: ${items.length}개`]);
+}
+function renderAllMenusTab(menuTabBar){
+  DIFF_CONTEXT_ACTIVE=true;
+  const{m:dm,dy}=fmtDate(S.date);
+  const items=filtered();
+  const selRestName=S.restaurant==='all'?'전체 식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  const diff=computeDayDiff();
+  let diffBarHTML='';
+  if(diff){
+    const{m:pm,dy:pdy}=fmtDate(diff.prevDate);
+    const pctVal=diff.totalToday?Math.round(diff.newCount/diff.totalToday*100):0;
+    diffBarHTML=`<div class="diff-bar">
+      <span class="diff-lbl">전일(${pm} ${pdy}) 대비</span>
+      <div class="diff-prog-wrap"><div class="diff-prog-fill" style="width:${pctVal}%"></div></div>
+      <span class="diff-new">신규 ${diff.newCount}개<span class="diff-pct">(${pctVal}%)</span></span>
+    </div>`;
+  }
+  document.getElementById('main').innerHTML=`
+    <div class="page-hdr-row"><div><div class="page-title">메뉴 현황<a class="title-link" href="https://m.planeatchoice.net/${_BC}/${_CC}/dailyMenu" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" title="오늘의메뉴 페이지 열기">오늘의메뉴 ↗</a></div><div class="page-sub">${dm}(${dy}) · ${MI[S.meal]} ${ML[S.meal]} · ${esc(selRestName)} · ${items.length}개</div></div>
+      <button class="dl-btn" id="menu-dl-all">⬇ 엑셀 다운로드</button>
+    </div>
+    ${menuTabBar}
+    ${filterBarHTML({showMeal:true,showDate:true,showType:true,showSearch:true})}
+    ${diffBarHTML}
+    <div id="menu-body"></div>`;
+  bindFilterEvents();
+  updateMenuBody();
+  document.getElementById('menu-dl-all')?.addEventListener('click',exportMenusAll);
+  document.querySelectorAll('[data-menutab]').forEach(b=>b.addEventListener('click',()=>set({menuTab:b.dataset.menutab})));
+}
+
+function exportMenusNew(){
+  const items=newMenuFiltered();
+  const selRestName=S.restaurant==='all'?'전체식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  const rows=items.map(it=>{
+    const rn=(RESTS.find(r=>r.id===it.rid)||{}).name||it.rid;
+    return[it.date,rn,ML[it.meal]||it.meal,it.name,it.type==='handmade'?'수제':'완제',it.isSO?'품절':'',it.kcal||''];
+  });
+  downloadCSV(`메뉴현황_신규메뉴_${S.newMenuDate||TODAY}_${selRestName}.csv`,['날짜','식당','끼니','메뉴명','구분','품절여부','칼로리'],rows,[`전체 메뉴수: ${items.length}개`]);
+}
+function renderNewMenuTab(menuTabBar){
+  if(!S.newMenuDate||!newMenuDates().includes(S.newMenuDate))S.newMenuDate=TODAY;
+  const items=newMenuFiltered();
+  // 이 탭에 표시되는 항목은 정의상 전부 신규이므로, 목록 전체를 NEW 뱃지 판정 기준으로 사용
+  // (전체 메뉴 탭의 '전일 대비' NEW와는 다른 색으로 구분 — MONTH_* 전용 상태 사용)
+  MONTH_CONTEXT_ACTIVE=true;
+  MONTH_NEW_NAMES=new Set(items.map(it=>normItemName(it.name)));
+  const selRestName=S.restaurant==='all'?'전체 식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  const daysCovered=menuHistDaysCovered();
+  const covNote=daysCovered<30
+    ?`<span style="color:var(--amber)">누적 이력 ${daysCovered}일치 (30일 채워지면 정확도 향상)</span>`
+    :`누적 이력 ${daysCovered}일치`;
+  const ndLabels=['오늘','내일','모레'];
+  const ndDates=newMenuDates();
+  const dateTabHTML=`<div class="filter-bar"><div class="filter-row"><span class="ctrl-lbl">날짜</span><div class="rest-tabs">
+    ${ndDates.map((d,i)=>{const{m,dy}=fmtDate(d);return`<button class="rtab${S.newMenuDate===d?' on':''}" data-newmenudate="${d}">${ndLabels[i]} ${m}(${dy})</button>`;}).join('')}
+  </div></div></div>`;
+  const selIdx=ndDates.indexOf(S.newMenuDate);
+  const{m:selM,dy:selDy}=fmtDate(S.newMenuDate);
+  const selDateLbl=`${ndLabels[selIdx]} ${selM}(${selDy})`;
+  let bodyHTML;
+  if(!items.length){
+    bodyHTML=`<div class="emp">최근 30일간 없었던 신규 메뉴가 없습니다.</div>`;
+  }else if(S.restaurant==='all'){
+    const byRest={};
+    items.forEach(it=>{(byRest[it.rid]=byRest[it.rid]||[]).push(it);});
+    bodyHTML=RESTS.filter(r=>byRest[r.id]&&byRest[r.id].length).map(r=>`
+      <div style="margin-bottom:18px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">
+          ${esc(r.name)} <span style="font-size:11px;font-weight:400;color:var(--muted)">${byRest[r.id].length}개</span>
+        </div>
+        ${groupedMenuHTML(byRest[r.id],r.id+'::')}
+      </div>`).join('');
+  }else{
+    bodyHTML=groupedMenuHTML(items);
+  }
+  document.getElementById('main').innerHTML=`
+    <div class="page-hdr-row"><div><div class="page-title">메뉴 현황</div><div class="page-sub">신규 메뉴 · ${selDateLbl} · ${MI[S.meal]} ${ML[S.meal]} · ${esc(selRestName)} · ${items.length}개 · ${covNote}</div></div>
+      <button class="dl-btn" id="menu-dl-new">⬇ 엑셀 다운로드</button>
+    </div>
+    ${menuTabBar}
+    ${dateTabHTML}
+    ${filterBarHTML({showMeal:true})}
+    <div id="menu-body">${bodyHTML}</div>`;
+  bindFilterEvents();
+  bindGroupEvents();
+  document.getElementById('menu-dl-new')?.addEventListener('click',exportMenusNew);
+  document.querySelectorAll('[data-menutab]').forEach(b=>b.addEventListener('click',()=>set({menuTab:b.dataset.menutab})));
+  document.querySelectorAll('[data-newmenudate]').forEach(b=>b.addEventListener('click',()=>set({newMenuDate:b.dataset.newmenudate})));
+}
+
+/* ============================================================
+   메뉴현황 하위: 이력조회 탭 — 특정 메뉴의 전체 등장 이력 + 월평균 제공횟수
+   MENU_HIST에는 정규화된 이름만 저장되어 있어 검색·매칭 기준도 동일하게 normItemName() 사용
+   ============================================================ */
+function histDistinctNames(restFilter,mealFilter){
+  const freq={};
+  for(const byRid of Object.values(MENU_HIST)){
+    const rids=(restFilter&&restFilter!=='all')?[restFilter]:Object.keys(byRid);
+    for(const rid of rids){
+      const byMeal=byRid[rid];
+      if(!byMeal)continue;
+      const meals=(mealFilter&&mealFilter!=='all')?[mealFilter]:Object.keys(byMeal);
+      for(const meal of meals){
+        const names=byMeal[meal];
+        if(!names)continue;
+        names.forEach(n=>{freq[n]=(freq[n]||0)+1;});
+      }
+    }
+  }
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).map(([n])=>n);
+}
+function histMatchesFor(normName,restFilter,mealFilter){
+  const rows=[];
+  for(const[date,byRid] of Object.entries(MENU_HIST)){
+    const rids=(restFilter&&restFilter!=='all')?[restFilter]:Object.keys(byRid);
+    for(const rid of rids){
+      const byMeal=byRid[rid];
+      if(!byMeal)continue;
+      const meals=(mealFilter&&mealFilter!=='all')?[mealFilter]:Object.keys(byMeal);
+      for(const meal of meals){
+        const names=byMeal[meal];
+        if(names&&names.includes(normName))rows.push({date,rid,meal});
+      }
+    }
+  }
+  return rows.sort((a,b)=>b.date.localeCompare(a.date));
+}
+function histSuggestions(){
+  const q=normItemName(S.histQuery||'');
+  if(!q)return[];
+  return histDistinctNames(S.histRest,S.histMeal).filter(n=>n.includes(q)).slice(0,8);
+}
+function histBodyHTML(){
+  const sel=S.histSel||'';
+  const sugg=sel&&normItemName(S.histQuery||'')===sel?[]:histSuggestions();
+  let html='';
+  if(sugg.length){
+    html+=`<div class="rest-tabs" style="margin-bottom:14px">${sugg.map(n=>`<button class="rtab" data-histsel="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
+  }
+  if(!sel||sugg.length){
+    if(!sugg.length&&S.histQuery)html+=`<div class="emp">일치하는 메뉴 이력이 없습니다.</div>`;
+    else if(!S.histQuery)html+=`<div class="emp">메뉴명을 입력해서 검색해보세요 (최근 ${menuHistDaysCovered()}일치 이력 보유).</div>`;
+    if(!sel)return html;
+  }
+  const rows=histMatchesFor(sel,S.histRest,S.histMeal);
+  const daysCovered=menuHistDaysCovered();
+  const monthlyAvg=daysCovered>0?(rows.length/(daysCovered/30)):0;
+  const covNote=daysCovered<90
+    ?`<span style="color:var(--amber)">누적 이력 ${daysCovered}일치 (90일 채워지면 정확도 향상)</span>`
+    :`누적 이력 ${daysCovered}일치`;
+  const lastDateLbl=rows.length?(()=>{const{m,dy}=fmtDate(rows[0].date);return`${m}(${dy})`;})():'-';
+  const histRestName=S.histRest==='all'?'전체 식당':(RESTS.find(r=>r.id===S.histRest)||{}).name||'';
+  const histMealName=(!S.histMeal||S.histMeal==='all')?'전체 끼니':`${MI[S.histMeal]||''} ${ML[S.histMeal]||S.histMeal}`;
+  html+=`<div class="so-dash-card" style="margin-bottom:14px">
+    <div class="card-title">"${esc(sel)}" 제공 이력 <span style="font-size:11px;font-weight:400;color:var(--muted)">· ${esc(histRestName)} · ${esc(histMealName)}</span></div>
+    <div class="stat-row">
+      <div class="gcard g1"><div class="gc-deco"></div><div class="gc-deco2"></div>
+        <div class="gc-arrow">📋</div><div class="gc-lbl">총 제공 횟수</div><div class="gc-num">${rows.length}</div><div class="gc-chg">${covNote}</div>
+      </div>
+      <div class="gcard g2"><div class="gc-deco"></div><div class="gc-deco2"></div>
+        <div class="gc-arrow">📅</div><div class="gc-lbl">월평균 제공</div><div class="gc-num">${monthlyAvg.toFixed(1)}<span style="font-size:14px">회</span></div><div class="gc-chg">최근 ${daysCovered}일 기준</div>
+      </div>
+      <div class="gcard g3"><div class="gc-deco"></div><div class="gc-deco2"></div>
+        <div class="gc-arrow">🕓</div><div class="gc-lbl">최근 제공일</div><div class="gc-num" style="font-size:20px">${lastDateLbl}</div><div class="gc-chg">&nbsp;</div>
+      </div>
+    </div>
+  </div>`;
+  if(!rows.length){
+    html+=`<div class="emp">이력이 없습니다.</div>`;
+  }else{
+    html+=`<div class="rest-tbl-wrap"><table class="rest-tbl">
+      <thead><tr><th>날짜</th><th>끼니</th><th>식당</th></tr></thead>
+      <tbody>${rows.map(r=>{const{m,dy}=fmtDate(r.date);const rn=(RESTS.find(x=>x.id===r.rid)||{}).name||r.rid;return`<tr><td>${m}(${dy})</td><td>${MI[r.meal]||''} ${ML[r.meal]||r.meal}</td><td>${esc(rn)}</td></tr>`;}).join('')}</tbody>
+    </table></div>`;
+  }
+  return html;
+}
+function updateHistBody(){
+  const el=document.getElementById('hist-body');
+  if(!el)return;
+  el.innerHTML=histBodyHTML();
+  bindHistBodyEvents();
+}
+function bindHistBodyEvents(){
+  document.querySelectorAll('[data-histsel]').forEach(b=>b.addEventListener('click',()=>{
+    S.histSel=b.dataset.histsel;
+    S.histQuery=b.dataset.histsel;
+    updateHistBody();
+    const input=document.getElementById('hist-srch');
+    if(input)input.value=S.histQuery;
+  }));
+}
+function renderMenuHistoryTab(menuTabBar){
+  const histRestTabsHTML=`<div class="filter-bar"><div class="filter-row">
+    <span class="ctrl-lbl">식당</span>
+    <div class="rest-tabs">
+      <button class="rtab${S.histRest==='all'?' on':''}" data-histrest="all">전체</button>
+      ${RESTS.map(r=>`<button class="rtab${S.histRest===r.id?' on':''}" data-histrest="${r.id}">${esc(r.name)}</button>`).join('')}
+    </div>
+  </div></div>`;
+  const histMealTabsHTML=`<div class="filter-bar"><div class="filter-row">
+    <span class="ctrl-lbl">끼니</span>
+    <div class="rest-tabs">
+      <button class="rtab${(!S.histMeal||S.histMeal==='all')?' on':''}" data-histmeal="all">전체</button>
+      ${MEALS.map(ml=>`<button class="rtab${S.histMeal===ml?' on':''}" data-histmeal="${ml}">${MI[ml]} ${ML[ml]}</button>`).join('')}
+    </div>
+  </div></div>`;
+  document.getElementById('main').innerHTML=`
+    <div class="page-hdr-row"><div><div class="page-title">메뉴 현황</div><div class="page-sub">이력조회 · 메뉴명으로 검색하면 지금까지의 제공 이력과 월평균 제공 횟수를 보여줍니다</div></div></div>
+    ${menuTabBar}
+    ${histRestTabsHTML}
+    ${histMealTabsHTML}
+    <div class="filter-bar"><div class="filter-row">
+      <input class="srch-input" id="hist-srch" placeholder="🔍 메뉴명 검색..." value="${esc(S.histQuery||'')}" style="margin-left:0;width:min(100%,360px)">
+    </div></div>
+    <div id="hist-body">${histBodyHTML()}</div>`;
+  document.querySelectorAll('[data-menutab]').forEach(b=>b.addEventListener('click',()=>set({menuTab:b.dataset.menutab})));
+  document.querySelectorAll('[data-histrest]').forEach(b=>b.addEventListener('click',()=>set({histRest:b.dataset.histrest})));
+  document.querySelectorAll('[data-histmeal]').forEach(b=>b.addEventListener('click',()=>set({histMeal:b.dataset.histmeal})));
+  bindHistBodyEvents();
+  const input=document.getElementById('hist-srch');
+  if(input){
+    input.addEventListener('input',e=>{
+      S.histQuery=e.target.value;
+      S.histSel=''; // 정확히 일치하는 이름이라도 자동 선택하지 않고, 후보를 클릭해야 조회됨
+      updateHistBody();
+    });
+  }
+}
+
+/* ============================================================
+   품절 누적 분석 헬퍼
+   ============================================================ */
+function parseSoldoutHistory(days,rid){
+  rid=rid||'all';
+  const cutDate=days>0?(()=>{const d=new Date();d.setDate(d.getDate()-days);return localDateStr(d);})():null;
+  const byRest={},byMeal={breakfast:0,lunch:0,dinner:0},byMenu={},byDate={},byMenuLog={};
+  let total=0;const activeDates=new Set();
+  for(const[date,entries] of Object.entries(SOLDOUT_LOG)){
+    if(cutDate&&date<cutDate)continue;
+    for(const[key,val] of Object.entries(entries)){
+      const i1=key.indexOf('|'),i2=key.indexOf('|',i1+1);
+      const kRid=key.slice(0,i1),meal=key.slice(i1+1,i2),name=key.slice(i2+1);
+      byRest[kRid]=(byRest[kRid]||0)+1;
+      if(rid!=='all'&&kRid!==rid)continue;
+      total++;activeDates.add(date);
+      if(meal in byMeal)byMeal[meal]++;
+      const cleanName=name.replace(/\(품절\)/g,'').replace(/^\*품절\s*/,'').replace(/\s+/g,' ').trim();
+      byMenu[cleanName]=(byMenu[cleanName]||0)+1;
+      if(!byMenuLog[cleanName])byMenuLog[cleanName]=[];
+      byMenuLog[cleanName].push({date,meal,rid:kRid,at:(val&&val.detectedAt)||''});
+      if(!byDate[date])byDate[date]={breakfast:0,lunch:0,dinner:0};
+      if(meal in byDate[date])byDate[date][meal]++;
+    }
+  }
+  return{byRest,byMeal,byMenu,byDate,byMenuLog,total,numDays:activeDates.size};
+}
+function exportSoldoutHistory(){
+  const{byMenuLog}=parseSoldoutHistory(S.soHistDays,S.soHistRest);
+  const rows=[];
+  for(const[name,logs] of Object.entries(byMenuLog)){
+    for(const l of logs){
+      const rn=(RESTS.find(r=>r.id===l.rid)||{}).name||l.rid;
+      rows.push([l.date,rn,ML[l.meal]||l.meal,soMenuTypeLabel(name),name,l.at||'',soTimeBucketLabel(l.meal,l.at)]);
+    }
+  }
+  rows.sort((a,b)=>b[0].localeCompare(a[0])||a[1].localeCompare(b[1])||a[2].localeCompare(b[2]));
+  const selName=S.soHistRest==='all'?'전체식당':(RESTS.find(r=>r.id===S.soHistRest)||{}).name||'';
+  const periodLbl=S.soHistDays===0?'전체':S.soHistDays+'일';
+  downloadCSV(`품절현황_누적분석_${periodLbl}_${selName}.csv`,['날짜','식당','끼니','구분','메뉴명','감지시각','품절발생시간대'],rows);
+}
+
+function soldoutTrendHTML(byDate){
+  const dates=Object.keys(byDate).sort();
+  if(!dates.length)return`<div class="sh-empty">누적 데이터 없음</div>`;
+  const max=Math.max(...dates.map(d=>byDate[d].breakfast+byDate[d].lunch+byDate[d].dinner))||1;
+  const H=84;
+  const cols=dates.map(d=>{
+    const v=byDate[d],tot=v.breakfast+v.lunch+v.dinner;
+    const day=new Date(d+'T00:00:00').getDay();
+    const dateCls=day===0?' sun':day===6?' sat':'';
+    const{m,dy}=fmtDate(d);
+    const seg=(cnt,cls,ico,lbl)=>cnt?`<div class="so-trend-seg ${cls}" data-tip="${m}(${dy}) ${ico} ${lbl} · 품절 ${cnt}회" style="height:${Math.max(2,Math.round(cnt/max*H))}px"></div>`:'';
+    return`<div class="so-trend-col">
+      <span class="so-trend-total">${tot}</span>
+      <div class="so-trend-stack">${seg(v.breakfast,'sg-b','🌅','아침')}${seg(v.lunch,'sg-l','☀️','점심')}${seg(v.dinner,'sg-d','🌙','저녁')}</div>
+      <span class="so-trend-date${dateCls}">${m}</span>
+    </div>`;
+  }).join('');
+  return`<div class="so-legend">
+      <span><i style="background:var(--amber)"></i>아침</span>
+      <span><i style="background:var(--g1a)"></i>점심</span>
+      <span><i style="background:var(--g2b)"></i>저녁</span>
+    </div>
+    <div class="so-trend-scroll"><div class="so-trend">${cols}</div></div>`;
+}
+
+function bindTrendTips(){
+  let tip=document.getElementById('chart-tip');
+  if(!tip){tip=document.createElement('div');tip.id='chart-tip';tip.className='chart-tip';document.body.appendChild(tip);}
+  tip.style.display='none';
+  const hide=()=>{tip.style.display='none';};
+  document.querySelectorAll('.so-trend-seg[data-tip]').forEach(sg=>{
+    const show=e=>{
+      tip.textContent=sg.dataset.tip;tip.style.display='block';
+      let x=e.clientX+12;
+      if(x+tip.offsetWidth>innerWidth-8)x=e.clientX-tip.offsetWidth-12;
+      tip.style.left=x+'px';tip.style.top=(e.clientY-32)+'px';
+      if(e.pointerType==='touch'){clearTimeout(tip._t);tip._t=setTimeout(hide,1600);}
+    };
+    sg.addEventListener('pointerenter',show);
+    sg.addEventListener('pointermove',show);
+    sg.addEventListener('pointerleave',hide);
+  });
+}
+
+function renderSoldoutHistoryView(tabBar){
+  const days=S.soHistDays,rid=S.soHistRest;
+  const{byRest,byMeal,byMenu,byDate,byMenuLog,total,numDays}=parseSoldoutHistory(days,rid);
+  const selName=rid==='all'?'전체 식당':(RESTS.find(r=>r.id===rid)||{}).name||'';
+
+  const periodBtns=[7,30,0].map(d=>`<button class="sh-period${S.soHistDays===d?' active':''}" data-sodays="${d}">${d===0?'전체':d+'일'}</button>`).join('');
+
+  const restChips=`<div class="rest-tabs" style="flex-shrink:0">
+    <button class="rtab${rid==='all'?' on':''}" data-sohrest="all">전체</button>
+    ${RESTS.map(r=>`<button class="rtab${rid===r.id?' on':''}" data-sohrest="${r.id}">${esc(r.name)}</button>`).join('')}
+  </div>`;
+
+  const trendHTML=soldoutTrendHTML(byDate);
+
+  const restRanking=RESTS.map(r=>({...r,cnt:byRest[r.id]||0})).filter(r=>r.cnt>0).sort((a,b)=>b.cnt-a.cnt);
+  const maxR=restRanking[0]?.cnt||1;
+  const restHTML=restRanking.length?restRanking.map((r,i)=>`
+    <div class="sh-row">
+      <span class="sh-rank">${i+1}</span>
+      <span class="sh-name">${esc(r.name)}</span>
+      <div class="sh-bwrap"><div class="sh-bar sh-bar-r" style="width:${pct(r.cnt,maxR)}%"></div></div>
+      <span class="sh-cnt">${r.cnt}회</span>
+    </div>`).join(''):`<div class="sh-empty">누적 데이터 없음</div>`;
+  const restCard=rid==='all'?`<div class="so-dash-card" style="margin-bottom:12px">
+      <div class="card-title">식당별 품절 랭킹</div>${restHTML}
+    </div>`:'';
+
+  const mealTotal=Object.values(byMeal).reduce((s,v)=>s+v,0)||1;
+  const mealHTML=[{ml:'breakfast',ico:'🌅',lbl:'아침'},{ml:'lunch',ico:'☀️',lbl:'점심'},{ml:'dinner',ico:'🌙',lbl:'저녁'}].map(({ml,ico,lbl})=>`
+    <div class="sh-row">
+      <span class="sh-name-w">${ico} ${lbl}</span>
+      <div class="sh-bwrap"><div class="sh-bar sh-bar-m" style="width:${pct(byMeal[ml],mealTotal)}%"></div></div>
+      <span class="sh-cnt">${byMeal[ml]}회</span>
+      <span class="sh-pct">${pct(byMeal[ml],mealTotal)}%</span>
+    </div>`).join('');
+
+  const topMenus=Object.entries(byMenu).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxM=topMenus[0]?.[1]||1;
+  const menuHTML=topMenus.length?topMenus.map(([nm,cnt],i)=>{
+    const isOpen=SO_MENU_OPEN===nm;
+    let detailHTML='';
+    if(isOpen){
+      const logs=(byMenuLog[nm]||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)||MEALS.indexOf(b.meal)-MEALS.indexOf(a.meal));
+      detailHTML=`<div class="sh-detail">${logs.map(l=>{
+        const{m,dy}=fmtDate(l.date);
+        const rn=rid==='all'?`<span class="sh-detail-rest">${esc((RESTS.find(r=>r.id===l.rid)||{}).name||l.rid)}</span>`:'';
+        return`<div class="sh-detail-row">
+          <span class="sh-detail-date">${m}(${dy})</span>
+          <span class="sh-detail-meal">${MI[l.meal]||''} ${ML[l.meal]||l.meal}</span>
+          ${rn}
+          <span class="sh-detail-time">${l.at?l.at+' 감지':'-'}</span>
+        </div>`;
+      }).join('')}</div>`;
+    }
+    return`<button class="sh-row sh-row-btn${isOpen?' open':''}" data-somenu="${esc(nm)}">
+      <span class="sh-rank">${i+1}</span>
+      <span class="sh-name-lg">${esc(nm)}</span>
+      <div class="sh-bwrap"><div class="sh-bar sh-bar-n" style="width:${pct(cnt,maxM)}%"></div></div>
+      <span class="sh-cnt">${cnt}회</span>
+      <span class="sh-arr">${isOpen?'▲':'▼'}</span>
+    </button>${detailHTML}`;
+  }).join(''):`<div class="sh-empty">누적 데이터 없음</div>`;
+
+  document.getElementById('main').innerHTML=`
+    <div class="page-hdr-row"><div><div class="page-title">품절 현황</div><div class="page-sub">누적 분석 · ${esc(selName)} · ${numDays}일치 · 총 ${total}건</div></div>
+      <button class="dl-btn" id="so-dl-history">⬇ 엑셀 다운로드</button>
+    </div>
+    ${tabBar}
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <span style="font-size:11px;color:var(--muted);flex:1">조회 기간</span>
+      ${periodBtns}
+    </div>
+    ${restChips}
+    <div class="so-dash-card" style="margin-bottom:12px">
+      <div class="card-title">일자별 품절 추이 · ${esc(selName)}</div>${trendHTML}
+    </div>
+    ${restCard}
+    <div class="so-dash-card" style="margin-bottom:12px">
+      <div class="card-title">끼니별 품절 · ${esc(selName)}</div>${mealHTML}
+    </div>
+    <div class="so-dash-card">
+      <div class="card-title">자주 품절된 메뉴 TOP 10 · ${esc(selName)}</div>${menuHTML}
+    </div>`;
+  document.getElementById('so-dl-history')?.addEventListener('click',exportSoldoutHistory);
+  document.querySelectorAll('[data-sotab]').forEach(b=>b.addEventListener('click',()=>set({soTab:b.dataset.sotab})));
+  document.querySelectorAll('[data-sodays]').forEach(b=>b.addEventListener('click',()=>set({soHistDays:+b.dataset.sodays})));
+  document.querySelectorAll('[data-sohrest]').forEach(b=>b.addEventListener('click',()=>{SO_MENU_OPEN=null;set({soHistRest:b.dataset.sohrest});}));
+  document.querySelectorAll('[data-somenu]').forEach(b=>b.addEventListener('click',()=>{
+    SO_MENU_OPEN=SO_MENU_OPEN===b.dataset.somenu?null:b.dataset.somenu;renderMain();
+  }));
+  const tw=document.querySelector('.so-trend-scroll');if(tw)tw.scrollLeft=tw.scrollWidth;
+  bindTrendTips();
+}
+
+/* ============================================================
+   뷰: 품절현황
+   ============================================================ */
+function renderViewSoldout(){
+  const tabBar=`<div class="so-tab-bar">
+    <button class="so-tab${S.soTab==='today'?' active':''}" data-sotab="today">오늘 현황</button>
+    <button class="so-tab${S.soTab==='history'?' active':''}" data-sotab="history">누적 분석</button>
+  </div>`;
+  if(S.soTab==='history'){renderSoldoutHistoryView(tabBar);return;}
+
+  const soItems=soldOutFiltered();
+  const{m:dm,dy}=fmtDate(S.date);
+  const selRestName=S.restaurant==='all'?'전체 식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+
+  let dashHTML='',bodyHTML='';
+
+  if(soItems.length===0){
+    bodyHTML=`<div style="background:var(--card);border-radius:var(--r);padding:50px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <div style="font-size:16px;font-weight:700;color:var(--green)">품절 메뉴 없음</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">${dm}(${dy}) ${esc(selRestName)} 기준 모든 메뉴 정상 운영 중</div>
+    </div>`;
+  }else{
+    /* ── 대시보드 ── */
+    const allBase=[...ALL_MENUS,...LIVE_MENUS].filter(m=>
+      m.date===S.date&&(S.restaurant==='all'||m.rid===S.restaurant));
+    const totalCount=allBase.length;
+    const soPct=pct(soItems.length,totalCount);
+
+    const mealSt=MEALS.map(ml=>{
+      const mB=allBase.filter(m=>m.meal===ml),mS=soItems.filter(m=>m.meal===ml);
+      return{ml,total:mB.length,so:mS.length,p:pct(mS.length,mB.length)};
+    });
+
+    const hmSo=soItems.filter(m=>m.type==='handmade').length;
+    const prSo=soItems.filter(m=>m.type==='processed').length;
+    const hmSoPct=pct(hmSo,soItems.length),prSoPct=pct(prSo,soItems.length);
+
+    const summaryCard=`<div class="so-dash-card" style="margin-bottom:14px">
+      <div class="card-title">품절 종합 현황</div>
+      <div style="display:flex;align-items:center;gap:18px;margin-bottom:16px">
+        ${donutSVG([{val:soItems.length,color:'#FF6B9D'},{val:Math.max(totalCount-soItems.length,0),color:'rgba(255,255,255,.1)'}],88)}
+        <div style="flex:1">
+          <div style="font-size:28px;font-weight:800;color:var(--g1a)">${soPct}%</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">품절 ${soItems.length} / 전체 ${totalCount}개</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;font-weight:700;color:#38EF7D;width:36px">수제 ${hmSo}</span>
+            <div style="flex:1;height:7px;border-radius:4px;overflow:hidden;display:flex">
+              <div style="width:${hmSoPct}%;background:#38EF7D"></div>
+              <div style="flex:1;background:#5FC3E4"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#5FC3E4;width:36px;text-align:right">완제 ${prSo}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:2px">
+            <span style="color:#38EF7D">${hmSoPct}%</span>
+            <span style="color:#5FC3E4">${prSoPct}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${mealSt.map(ms=>{
+          const mHm=soItems.filter(m=>m.meal===ms.ml&&m.type==='handmade').length;
+          const mPr=soItems.filter(m=>m.meal===ms.ml&&m.type==='processed').length;
+          return`<div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:3px">
+              <span>${MI[ms.ml]} ${ML[ms.ml]}</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="color:#38EF7D">수제 ${mHm}</span>
+                <span style="color:#5FC3E4">완제 ${mPr}</span>
+                <span style="color:var(--muted)">${ms.so}/${ms.total}개 · ${ms.p}%</span>
+              </div>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${ms.p}%;background:var(--g1a);border-radius:2px"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+    const BCLR=['#FF6B9D','rgba(255,107,157,.72)','rgba(255,255,255,.35)','rgba(95,195,228,.72)','#5FC3E4'];
+    const timingRows=MEALS.map(ml=>{
+      const mSo=soItems.filter(m=>m.meal===ml);
+      if(!mSo.length)return'';
+      const buckets=SO_TIME_BUCKETS[ml]||[];
+      const labels=buckets.map((b,i)=>`${SO_TIME_BUCKET_TAGS[i]}(${b[0]}~${b[1]||''})`);
+      const openLbl=buckets[0]?.[0]||'';
+      const bk=[0,0,0,0,0];let hasT=false;
+      mSo.forEach(it=>{
+        const idx=soTimeBucketIndex(ml,soDetectedAt(it));
+        if(idx<0)return;hasT=true;bk[idx]++;
+      });
+      if(!hasT)return`<div style="font-size:10px;color:var(--muted);padding:3px 0">${MI[ml]} ${ML[ml]} — 시간 기록 없음</div>`;
+      const mx=Math.max(...bk,1);
+      return`<div style="margin-bottom:13px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px">
+          ${MI[ml]} ${ML[ml]} <span style="color:rgba(255,255,255,.22);font-weight:400">오픈 ${openLbl}</span>
+        </div>
+        ${bk.map((cnt,i)=>`
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+            <span style="font-size:9px;color:${BCLR[i]};width:108px;flex-shrink:0;text-align:right">${labels[i]}</span>
+            <div style="flex:1;height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${cnt?Math.max(Math.round(cnt/mx*100),5):0}%;background:${BCLR[i]};border-radius:4px"></div>
+            </div>
+            <span style="font-size:10px;font-weight:700;width:16px;text-align:right;color:${cnt?BCLR[i]:'var(--muted)'}">${cnt||'·'}</span>
+          </div>`).join('')}
+      </div>`;
+    }).filter(Boolean).join('');
+
+    const timingCard=`<div class="so-dash-card">
+      <div class="card-title">품절 발생 시간대 <span style="font-size:9px;font-weight:400;color:var(--muted)">(끼니별 시간대 구간 기준)</span></div>
+      ${timingRows||'<div style="font-size:11px;color:var(--muted);padding:12px 0">시간 기록 없음</div>'}
+    </div>`;
+
+    /* ── 식당별 품절 현황 (전체 식당 선택 시에만) ── */
+    let restByMealCard='';
+    if(S.restaurant==='all'){
+      const mealSections=MEALS.map(ml=>{
+        const mS=soItems.filter(m=>m.meal===ml);
+        if(!mS.length)return'';
+        const rows=RESTS.map(r=>{
+          const rB=allBase.filter(m=>m.meal===ml&&m.rid===r.id);
+          const rS=mS.filter(m=>m.rid===r.id);
+          return{name:r.name,total:rB.length,so:rS.length,p:pct(rS.length,rB.length)};
+        }).filter(r=>r.so>0).sort((a,b)=>b.so-a.so);
+        if(!rows.length)return'';
+        return`<div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px">${MI[ml]} ${ML[ml]}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${rows.map(r=>{const clr=soPctColor(r.p);return`<div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:3px">
+                <span>${esc(r.name)}</span>
+                <span style="color:${clr};font-weight:700">${r.so}/${r.total}개 · ${r.p}%</span>
+              </div>
+              <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:${r.p}%;background:${clr};border-radius:2px"></div>
+              </div>
+            </div>`;}).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      if(mealSections){
+        restByMealCard=`<div class="so-dash-card" style="margin-bottom:14px">
+          <div class="card-title">식당별 품절 현황</div>
+          ${mealSections}
+        </div>`;
+      }
+    }
+
+    dashHTML=summaryCard+restByMealCard+timingCard;
+
+    /* ── 접히는 끼니별 목록 ── */
+    const sectionsHTML=[...MEALS,'__other__'].map(ml=>{
+      const its=(ml==='__other__'?soItems.filter(m=>!MEALS.includes(m.meal)):soItems.filter(m=>m.meal===ml))
+        .sort((a,b)=>(soDetectedAt(a)||'99:99').localeCompare(soDetectedAt(b)||'99:99'));
+      if(!its.length)return'';
+      const lbl=ml==='__other__'?'기타':`${MI[ml]} ${ML[ml]}`;
+      const mbCls=MB_CLS[ml]||'mb-l',mlTxt=ml==='__other__'?'기타':ML[ml];
+      const isOpen=!!SO_MEAL_OPEN[ml];
+      return`<div class="so-grp">
+        <button class="so-meal-hdr${isOpen?' open':''}" data-so-meal="${ml}">
+          <span class="so-meal-arr">${isOpen?'▼':'▶'}</span>
+          <span>${lbl}</span>
+          <span class="so-meal-cnt">${its.length}개</span>
+        </button>
+        ${isOpen?`<div class="so-meal-body"><div class="so-list">${its.map(it=>{
+          const rn=(RESTS.find(r=>r.id===it.rid)||{}).name||'';
+          const detAt=soDetectedAt(it);
+          return`<div class="soi">
+            <div class="sodot"></div>
+            <div class="so-info"><div class="son">${esc(it.name)}</div><div class="sor">${esc(rn)}</div></div>
+            <span class="badge ${it.type==='handmade'?'bh':'bp'}">${it.type==='handmade'?'수제':'완제'}</span>
+            <span class="mb ${mbCls}">${mlTxt}</span>
+            ${detAt?`<span class="so-det-time">🕐 ${detAt}</span>`:''}
+          </div>`;
+        }).join('')}</div></div>`:''}
+      </div>`;
+    }).join('');
+
+    bodyHTML=`<div class="proj-card"><div class="so-view-wrap">${sectionsHTML}</div></div>`;
+  }
+
+  document.getElementById('main').innerHTML=`
+    <div class="page-hdr-row"><div><div class="page-title">품절 현황</div><div class="page-sub">${dm}(${dy}) · ${esc(selRestName)} · 품절 ${soItems.length}개</div></div>
+      <button class="dl-btn" id="so-dl-today">⬇ 엑셀 다운로드</button>
+    </div>
+    ${tabBar}
+    ${filterBarHTML({showDate:true})}
+    ${dashHTML}${bodyHTML}`;
+  bindFilterEvents();
+  document.getElementById('so-dl-today')?.addEventListener('click',exportSoldoutToday);
+  document.querySelectorAll('[data-sotab]').forEach(b=>b.addEventListener('click',()=>set({soTab:b.dataset.sotab})));
+  document.querySelectorAll('[data-so-meal]').forEach(b=>b.addEventListener('click',()=>{
+    SO_MEAL_OPEN[b.dataset.soMeal]=!SO_MEAL_OPEN[b.dataset.soMeal];renderMain();
+  }));
+}
+
+/* ============================================================
+   뷰: 수완제현황
+   ============================================================ */
+// [Main1]/[1Coin] 제외 필터 (수완제현황 전용, 패밀리홀 제외)
+const _HM_EXCL=/^\[(?:Main\s*1|1Coin)\]/;
+function hmBase(m){return m.rid==='family'||!_HM_EXCL.test(m.name);}
+function hmFiltered(){
+  return baseMeals().filter(m=>
+    (S.restaurant==='all'||m.rid===S.restaurant)&&
+    (S.type==='all'||m.type===S.type)&&
+    (S.query===''||m.name.includes(S.query))&&
+    hmBase(m)
+  );
+}
+
+function renderViewHandmade(){
+  const tabBar=`<div class="so-tab-bar">
+    <button class="so-tab${S.hmTab==='dashboard'?' active':''}" data-hmtab="dashboard">수완제 현황</button>
+    <button class="so-tab${S.hmTab==='menus'?' active':''}" data-hmtab="menus">식당별 메뉴</button>
+  </div>`;
+  if(S.hmTab==='menus'){renderHandmadeMenus(tabBar);return;}
+  renderHandmadeDashboard(tabBar);
+}
+
+function renderHandmadeDashboard(tabBar){
+  const base=baseMeals();
+  const{m:dm,dy}=fmtDate(S.date);
+  const selRestName=S.restaurant==='all'?'전체':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+
+  const summBase=(S.restaurant==='all'?base:base.filter(m=>m.rid===S.restaurant)).filter(hmBase);
+  const stTotal=summBase.length,stHm=summBase.filter(m=>m.type==='handmade').length,stPr=summBase.filter(m=>m.type==='processed').length;
+
+  const summaryHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="gcard g3"><div class="gc-deco"></div><div class="gc-deco2"></div>
+      <div class="gc-arrow">🍳</div><div class="gc-lbl">수제 메뉴</div>
+      <div class="gc-num">${stHm}</div>
+      <div class="gc-chg">전체의 ${pct(stHm,stTotal)}% · ${dm}(${dy}) ${ML[S.meal]}</div>
+    </div>
+    <div class="gcard g2"><div class="gc-deco"></div><div class="gc-deco2"></div>
+      <div class="gc-arrow">📦</div><div class="gc-lbl">완제 메뉴</div>
+      <div class="gc-num">${stPr}</div>
+      <div class="gc-chg">전체의 ${pct(stPr,stTotal)}% · 합계 ${stTotal}개</div>
+    </div>
+  </div>`;
+
+  const restData=RESTS.map(r=>{
+    const its=base.filter(m=>m.rid===r.id);if(!its.length)return null;
+    const itsHM=its.filter(hmBase);
+    const hm=itsHM.filter(m=>m.type==='handmade').length,pr=itsHM.filter(m=>m.type==='processed').length;
+    return{name:r.name,id:r.id,total:itsHM.length,hm,pr,hmPct:pct(hm,itsHM.length),prPct:pct(pr,itsHM.length)};
+  }).filter(Boolean);
+
+  const breakdownRows=restData.map(r=>`
+    <div class="hm-row">
+      <div class="hm-head"><span class="hm-name">${esc(r.name)}</span><span class="hm-nums">전체 ${r.total}개</span></div>
+      <div class="hm-track">
+        <div class="hm-fill-hm" style="width:${r.hmPct}%"></div>
+        <div class="hm-fill-pr" style="width:${r.prPct}%"></div>
+      </div>
+      <div class="hm-pct-row">
+        <span style="color:var(--green)">수제 ${r.hm}개 (${r.hmPct}%)</span>
+        <span style="color:var(--blue)">완제 ${r.pr}개 (${r.prPct}%)</span>
+      </div>
+    </div>`).join('');
+
+  const breakdownHTML=`<div class="proj-card">
+    <div class="proj-header">
+      <div class="proj-title">식당별 수완제 현황</div>
+      <div style="font-size:11px;color:var(--muted)">${dm}(${dy}) · ${ML[S.meal]}</div>
+    </div>
+    ${restData.length?breakdownRows:'<div class="emp">데이터 없음</div>'}
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      ${restTableHTML()}
+    </div>
+  </div>`;
+
+  document.getElementById('main').innerHTML=`
+    <div><div class="page-title">수완제 현황</div><div class="page-sub">${dm}(${dy}) · ${MI[S.meal]} ${ML[S.meal]} · ${esc(selRestName)}</div></div>
+    ${tabBar}
+    ${filterBarHTML({showMeal:true,showDate:true})}
+    ${summaryHTML}
+    ${breakdownHTML}`;
+  bindFilterEvents();
+  document.querySelectorAll('[data-hmtab]').forEach(b=>b.addEventListener('click',()=>set({hmTab:b.dataset.hmtab})));
+}
+
+function renderHandmadeMenus(tabBar){
+  const{m:dm,dy}=fmtDate(S.date);
+  const items=hmFiltered();
+  const selRestName=S.restaurant==='all'?'전체 식당':(RESTS.find(r=>r.id===S.restaurant)||{}).name||'';
+  document.getElementById('main').innerHTML=`
+    <div><div class="page-title">수완제 현황</div><div class="page-sub">${dm}(${dy}) · ${MI[S.meal]} ${ML[S.meal]} · ${esc(selRestName)} · ${items.length}개</div></div>
+    ${tabBar}
+    ${filterBarHTML({showMeal:true,showDate:true,showType:true,showSearch:true})}
+    <div id="menu-body"></div>`;
+  bindFilterEvents();
+  document.getElementById('menu-body').innerHTML=groupedMenuHTML(items);
+  bindGroupEvents();
+  document.querySelectorAll('[data-hmtab]').forEach(b=>b.addEventListener('click',()=>set({hmTab:b.dataset.hmtab})));
+}
+
+/* ============================================================
+   뷰: 브랜드콜라보
+   ============================================================ */
+const BC_RESTS=[{id:'r345',name:'R3·R4·R5'},{id:'together',name:'투게더홀'},{id:'family',name:'패밀리홀'},{id:'polaris',name:'폴라리스홀'}];
+let BC_LIST_OPEN=false;
+const BC_MEALS=[{id:'조',ico:'🌅',lbl:'아침'},{id:'중',ico:'☀️',lbl:'점심'},{id:'석',ico:'🌙',lbl:'저녁'}];
+function bcBrand(name){
+  let m=name.match(/^\[([^\]]+)\]/);
+  if(m)return m[1].trim();
+  m=name.match(/^\[(\S+)/); // 닫는 대괄호 누락 데이터: 첫 단어를 브랜드로
+  if(m)return m[1].trim();
+  return name.trim();
+}
+function bcMenuName(name){
+  if(/^\[[^\]]+\]/.test(name))return name.replace(/^\[[^\]]+\]\s*/,'').trim();
+  if(/^\[\S+\s/.test(name))return name.replace(/^\[\S+\s+/,'').trim();
+  return name.trim();
+}
+function bcMealLbl(meal){return meal.split('/').map(x=>(BC_MEALS.find(b=>b.id===x)||{lbl:x}).lbl).join('·');}
+function bcFiltered(){
+  return BRAND_DATA.filter(r=>{
+    if(S.bcRest!=='all'&&r[0]!==S.bcRest)return false;
+    if(S.bcMeal!=='all'&&!r[4].split('/').includes(S.bcMeal))return false;
+    if(S.bcYear&&r[1]!==S.bcYear)return false;
+    if(S.bcYear&&S.bcMonth&&r[2]!==S.bcMonth)return false;
+    return true;
+  });
+}
+function renderViewBrand(){
+  const items=bcFiltered();
+  const years=[...new Set(BRAND_DATA.map(r=>r[1]))].sort();
+  const months=S.bcYear?[...new Set(BRAND_DATA.filter(r=>r[1]===S.bcYear).map(r=>r[2]))].sort((a,b)=>a-b):[];
+  const selRest=S.bcRest==='all'?'전체 식당':(BC_RESTS.find(r=>r.id===S.bcRest)||{}).name||'';
+  const period=S.bcYear?(S.bcMonth?`${S.bcYear}년 ${S.bcMonth}월`:`${S.bcYear}년`):'전체 기간';
+
+  const filterHTML=`<div class="filter-bar">
+    <div class="filter-row">
+      <span class="ctrl-lbl">식당</span>
+      <div class="rest-tabs">
+        <button class="rtab${S.bcRest==='all'?' on':''}" data-bcrest="all">전체</button>
+        ${BC_RESTS.map(r=>`<button class="rtab${S.bcRest===r.id?' on':''}" data-bcrest="${r.id}">${esc(r.name)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="ctrl-lbl">끼니</span>
+      <div class="rest-tabs">
+        <button class="rtab${S.bcMeal==='all'?' on':''}" data-bcmeal="all">전체</button>
+        ${BC_MEALS.map(m=>`<button class="rtab${S.bcMeal===m.id?' on':''}" data-bcmeal="${m.id}">${m.ico} ${m.lbl}</button>`).join('')}
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="ctrl-lbl">연도</span>
+      <div class="rest-tabs">
+        <button class="rtab${!S.bcYear?' on':''}" data-bcyear="0">전체</button>
+        ${years.map(y=>`<button class="rtab${S.bcYear===y?' on':''}" data-bcyear="${y}">${y}년</button>`).join('')}
+      </div>
+    </div>
+    ${S.bcYear?`<div class="filter-row">
+      <span class="ctrl-lbl">월</span>
+      <div class="rest-tabs">
+        <button class="rtab${!S.bcMonth?' on':''}" data-bcmonth="0">전체</button>
+        ${months.map(m=>`<button class="rtab${S.bcMonth===m?' on':''}" data-bcmonth="${m}">${m}월</button>`).join('')}
+      </div>
+    </div>`:''}
+  </div>`;
+
+  /* 브랜드별 제공횟수 TOP10 */
+  const byBrand={};
+  items.forEach(r=>{const b=bcBrand(r[5]);byBrand[b]=(byBrand[b]||0)+1;});
+  const topBrands=Object.entries(byBrand).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ko')).slice(0,10);
+  const maxB=topBrands[0]?.[1]||1;
+  const brandHTML=topBrands.length?topBrands.map(([nm,cnt],i)=>`
+    <div class="sh-row">
+      <span class="sh-rank">${i+1}</span>
+      <span class="sh-name-lg">${esc(nm)}</span>
+      <div class="sh-bwrap"><div class="sh-bar sh-bar-r" style="width:${pct(cnt,maxB)}%"></div></div>
+      <span class="sh-cnt">${cnt}회</span>
+    </div>`).join(''):`<div class="sh-empty">해당 조건의 데이터 없음</div>`;
+
+  /* 전체 리스트 (최신순, 접이식) */
+  const firstDay=d=>{const m=String(d).match(/\d+/);return m?+m[0]:0;};
+  const sorted=items.slice().sort((a,b)=>b[1]-a[1]||b[2]-a[2]||firstDay(b[3])-firstDay(a[3]));
+  const showRest=S.bcRest==='all';
+  let listHTML='';
+  if(BC_LIST_OPEN){
+    listHTML=sorted.length?`<div class="rest-tbl-wrap" style="margin-top:12px"><table class="rest-tbl">
+      <thead><tr><th>일자</th><th>끼니</th>${showRest?'<th>식당</th>':''}<th>브랜드</th><th>메뉴명</th></tr></thead>
+      <tbody>${sorted.map(r=>`<tr>
+        <td style="white-space:nowrap">${r[1]}.${r[2]}.${esc(String(r[3]))}</td>
+        <td style="white-space:nowrap">${esc(bcMealLbl(r[4]))}</td>
+        ${showRest?`<td style="white-space:nowrap">${esc((BC_RESTS.find(x=>x.id===r[0])||{}).name||'')}</td>`:''}
+        <td style="white-space:nowrap;font-weight:600">${esc(bcBrand(r[5]))}</td>
+        <td>${esc(bcMenuName(r[5]))}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`:`<div class="sh-empty">해당 조건의 데이터 없음</div>`;
+  }
+
+  document.getElementById('main').innerHTML=`
+    <div><div class="page-title">브랜드 콜라보</div><div class="page-sub">${period} · ${esc(selRest)} · ${bcMealLbl(S.bcMeal==='all'?'조/중/석':S.bcMeal)} · ${items.length}건</div></div>
+    ${filterHTML}
+    <div class="so-dash-card" style="margin-bottom:12px">
+      <div class="card-title">브랜드 TOP 10 · ${esc(selRest)}</div>${brandHTML}
+    </div>
+    <div class="so-dash-card">
+      <button class="bc-list-hdr" id="bc-list-toggle">
+        <span class="mg-arr">${BC_LIST_OPEN?'▼':'▶'}</span>
+        <span class="bc-list-title">콜라보 전체 리스트</span>
+        <span class="mg-cnt">${sorted.length}건</span>
+      </button>${listHTML}
+    </div>`;
+  document.getElementById('bc-list-toggle').addEventListener('click',()=>{BC_LIST_OPEN=!BC_LIST_OPEN;renderMain();});
+  document.querySelectorAll('[data-bcrest]').forEach(b=>b.addEventListener('click',()=>set({bcRest:b.dataset.bcrest})));
+  document.querySelectorAll('[data-bcmeal]').forEach(b=>b.addEventListener('click',()=>set({bcMeal:b.dataset.bcmeal})));
+  document.querySelectorAll('[data-bcyear]').forEach(b=>b.addEventListener('click',()=>set({bcYear:+b.dataset.bcyear,bcMonth:0})));
+  document.querySelectorAll('[data-bcmonth]').forEach(b=>b.addEventListener('click',()=>set({bcMonth:+b.dataset.bcmonth})));
+}
+
+function renderViewPerformance(){
+  document.getElementById('main').innerHTML=`
+    <div><div class="page-title">실적 현황</div><div class="page-sub">추후 업데이트 예정</div></div>
+    <div class="tbd-wrap">
+      <div class="tbd-ico">📈</div>
+      <div class="tbd-title">준비 중입니다</div>
+      <div class="tbd-sub">메뉴 실적 및 통계 데이터가 이곳에 표시될 예정입니다.</div>
+      <div class="tbd-chip">TBD</div>
+    </div>`;
+}
+
+/* ============================================================
+   메인 라우터
+   ============================================================ */
+function renderMain(){
+  // NEW 뱃지 컨텍스트는 매 렌더마다 초기화 — 각 뷰가 필요할 때만 스스로 켠다 (다른 뷰로 상태가 새는 것 방지)
+  DIFF_CONTEXT_ACTIVE=false;
+  MONTH_CONTEXT_ACTIVE=false;
+  switch(S.view){
+    case'dashboard':   renderViewDashboard();break;
+    case'menus':       renderViewMenus();break;
+    case'soldout':     renderViewSoldout();break;
+    case'handmade':    renderViewHandmade();break;
+    case'brand':       renderViewBrand();break;
+    case'performance': renderViewPerformance();break;
+    default:           renderViewDashboard();
+  }
+}
+
+/* ============================================================
+   렌더: 사이드바
+   ============================================================ */
+function renderSidebar(){
+  const soCount=soldOutFiltered().length;
+  document.getElementById('sidebar').innerHTML=`
+    <div class="sb-logo">
+      <div class="sb-logo-ico">🍱</div>
+      <div>
+        <div class="sb-logo-txt">Meal<span>Hub</span></div>
+        <div class="sb-logo-sub">Take out</div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      ${NAV.map(n=>`
+        <button class="sb-item${S.view===n.view?' active':''}" data-view="${n.view}">
+          <span class="sb-ico">${n.ico}</span>${n.lbl}
+          ${n.view==='soldout'&&soCount>0?`<span class="sb-badge">${soCount}</span>`:''}
+        </button>`).join('')}
+    </div>
+    <div class="sb-footer">
+      ${LIVE_DATA?`<div class="live-tag" style="width:fit-content"><div class="live-dot"></div>실시간</div>`:`<span style="color:var(--amber)">샘플 데이터</span>`}
+    </div>`;
+  const bnavEl=document.getElementById('bnav');
+  if(bnavEl)bnavEl.innerHTML=NAV.map(n=>`
+    <button class="bnav-item${S.view===n.view?' active':''}" data-view="${n.view}">
+      <span class="bnav-ico">${n.ico}</span>
+      <span class="bnav-lbl">${n.lbl}</span>
+      ${n.view==='soldout'&&soCount>0?`<span class="bnav-badge">${soCount}</span>`:''}</button>`).join('');
+  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>set({view:b.dataset.view})));
+}
+
+/* ============================================================
+   렌더: 헤더 (Topbar)
+   ============================================================ */
+function renderHeader(){
+  const soCount=soldOutFiltered().length;
+  const n=new Date();
+  const liveUpdated=LIVE_DATA?new Date(LIVE_DATA.lastUpdated).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+  document.getElementById('hdr').innerHTML=`
+    <div class="tb-spacer"></div>
+    <div class="tb-right">
+      ${LIVE_DATA?`<div class="live-tag"><div class="live-dot"></div>${liveUpdated}</div>`:`<div class="live-tag" style="background:rgba(255,209,102,.12);color:var(--amber)">샘플</div>`}
+      <span class="nav-time" id="htime">${n.toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} ${timeStr()}</span>
+      <button class="tbi" id="btn-refresh" title="새로고침">↻</button>
+      <button class="tbi" id="btn-notif" title="품절 현황 보기">🔔${soCount>0?`<span class="tbi-badge">${soCount}</span>`:''}</button>
+      <div class="tb-avatar">👤</div>
+    </div>`;
+  document.getElementById('btn-refresh').onclick=()=>loadLiveData(true);
+  document.getElementById('btn-notif').onclick=()=>set({view:'soldout',soTab:'today'});
+}
+
+/* ============================================================
+   메인 렌더
+   ============================================================ */
+function render(){renderSidebar();renderHeader();renderMain();}
+
+loadSoldoutLog();
+loadMenuHist();
+render();
+loadLiveData();
+
+setInterval(()=>{
+  const el=document.getElementById('htime');
+  if(el){const n=new Date();el.textContent=n.toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' '+timeStr();}
+},1000);
+
+setInterval(()=>loadLiveData(),5*60*1000);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

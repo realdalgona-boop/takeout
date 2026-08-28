@@ -1,0 +1,19 @@
+{
+  "name": "MealHub 메뉴 대시보드",
+  "short_name": "MealHub",
+  "description": "Take-out 메뉴 현황 대시보드",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1B2039",
+  "theme_color": "#1B2039",
+  "orientation": "any",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
